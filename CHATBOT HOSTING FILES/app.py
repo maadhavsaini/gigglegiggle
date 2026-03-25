@@ -19,11 +19,11 @@ if not API_KEY:
 
 client = Groq(api_key=API_KEY)
 
-BASE_DIR = "/Users/maadhavsaini/aaaa/hello"
+BASE_DIR = os.getenv("DATA_DIR", os.path.join(APP_DIR, "data"))
 CHAT_DIR = os.path.join(BASE_DIR, "chats")
 TODO_FILE = os.path.join(BASE_DIR, "todos.txt")
 DONE_FILE = os.path.join(BASE_DIR, "done.txt")
-NOTES_DIR = os.path.join(BASE_DIR, "Desktop/Obsidian/notes")
+NOTES_DIR = os.path.join(BASE_DIR, "notes")
 CONSTITUTION_FILE = os.path.join(APP_DIR, "derei_constitution.md")
 
 os.makedirs(CHAT_DIR, exist_ok=True)
@@ -1181,4 +1181,6 @@ def news():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000, host='0.0.0.0')
+    port = int(os.getenv("PORT", "5000"))
+    debug = os.getenv("FLASK_DEBUG", "0") == "1"
+    app.run(debug=debug, port=port, host='0.0.0.0')
