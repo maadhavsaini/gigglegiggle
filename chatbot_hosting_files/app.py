@@ -14,10 +14,7 @@ APP_DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(APP_DIR, ".env"))
 
 API_KEY = os.getenv("GROQ_API_KEY")
-if not API_KEY:
-    raise RuntimeError("Missing GROQ_API_KEY. Add it to the .env file.")
-
-client = Groq(api_key=API_KEY)
+client = Groq(api_key=API_KEY) if API_KEY else None
 
 BASE_DIR = os.getenv("DATA_DIR", os.path.join(APP_DIR, "data"))
 CHAT_DIR = os.path.join(BASE_DIR, "chats")
@@ -253,6 +250,8 @@ def _model_summary(model_id):
 
 
 def get_groq_model_catalog():
+    if client is None:
+        raise RuntimeError("Missing GROQ_API_KEY. Configure it in Railway Variables.")
     discovered_ids = []
     source = "fallback"
     try:

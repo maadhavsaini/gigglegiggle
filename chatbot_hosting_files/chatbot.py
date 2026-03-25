@@ -34,12 +34,14 @@ SYSTEM_PROMPT = "You are a helpful assistant for a student and coder. Use clear 
 PREP_MESSAGE = """"""
 # ─────────────────────────────────────────────────────────────────────────────
 
-CHAT_DIR = "/Users/maadhavsaini/aaaa/hello/chats"
-IMAGE_DIR = "/Users/maadhavsaini/aaaa/hello/images"
-TODO_FILE = "/Users/maadhavsaini/aaaa/hello/todos.txt"
-DONE_FILE = "/Users/maadhavsaini/aaaa/hello/done.txt"
-LAST_SEEDED_FILE = "/Users/maadhavsaini/aaaa/hello/last_seeded.txt"
-NOTES_DIR = "/Users/maadhavsaini/Desktop/Obsidian/notes"
+# Use environment-based paths for flexibility (works both locally and in production)
+BASE_DATA_DIR = os.getenv("DATA_DIR", os.path.join(APP_DIR, "data"))
+CHAT_DIR = os.path.join(BASE_DATA_DIR, "chats")
+IMAGE_DIR = os.path.join(BASE_DATA_DIR, "images")
+TODO_FILE = os.path.join(BASE_DATA_DIR, "todos.txt")
+DONE_FILE = os.path.join(BASE_DATA_DIR, "done.txt")
+LAST_SEEDED_FILE = os.path.join(BASE_DATA_DIR, "last_seeded.txt")
+NOTES_DIR = os.path.join(BASE_DATA_DIR, "notes")
 
 DAILY_TASKS = [
     "25m HOSA",
