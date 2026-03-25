@@ -6,6 +6,7 @@ import json
 import re
 from datetime import datetime
 import PyPDF2
+from auth import UserManager, ChatManager
 
 app = Flask(__name__)
 
@@ -17,6 +18,10 @@ API_KEY = os.getenv("GROQ_API_KEY")
 client = Groq(api_key=API_KEY) if API_KEY else None
 
 BASE_DIR = os.getenv("DATA_DIR", os.path.join(APP_DIR, "data"))
+
+# Initialize authentication managers
+user_manager = UserManager(BASE_DIR)
+chat_manager = ChatManager(BASE_DIR)
 CHAT_DIR = os.path.join(BASE_DIR, "chats")
 TODO_FILE = os.path.join(BASE_DIR, "todos.txt")
 DONE_FILE = os.path.join(BASE_DIR, "done.txt")
@@ -548,7 +553,7 @@ def build_vision_user_content(message, attachment):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index_new.html')
 
 @app.route('/static/<path:filename>')
 def static_files(filename):
@@ -1178,6 +1183,174 @@ def news():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+# ─────────────────────────────────────────────────────────────────────────────
+# AUTHENTICATION ENDPOINTS
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.route('/api/auth/register', methods=['POST'])
+def register():
+    """Register a new user"""
+    data = request.get_json() or {}
+    username = data.get('username', '').strip()
+    email = data.get('email', '').strip()
+    password = data.get('password', '')
+    
+    if not username or not email or not password:
+        return jsonify({"error": "Missing username, email, or password"}), 400
+    
+    if len(username) < 3:
+        return jsonify({"error": "Username must be at least 3 characters"}), 400
+    
+    if len(password) < 6:
+        return jsonify({"error": "Password must be at least 6 characters"}), 400
+    
+    success, message = user_manager.register_user(username, email, password)
+    
+    if not success:
+        return jsonify({"error": message}), 400
+    
+    return jsonify({"message": message}), 201
+
+
+@app.route('/api/auth/login', methods=['POST'])
+def login():
+    """Login user and return session token"""
+    data = request.get_json() or {}
+    username = data.get('username', '').strip()
+    password = data.get('password', '')
+    
+    if not username or not password:
+        return jsonify({"error": "Missing username or password"}), 400
+    
+    session_token, message = user_manager.login_user(username, password)
+    
+    if not session_token:
+        return jsonify({"error": message}), 401
+    
+    return jsonify({
+        "session_token": session_token,
+        "username": username,
+        "message": message
+    }), 200
+
+
+@app.route('/api/auth/logout', methods=['POST'])
+def logout():
+    """Logout user"""
+    data = request.get_json() or {}
+    session_token = data.get('session_token', '')
+    
+    user_manager.logout_user(session_token)
+    return jsonify({"message": "Logged out successfully"}), 200
+
+
+@app.route('/api/auth/verify', methods=['GET'])
+def verify_auth():
+    """Verify session token"""
+    session_token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    
+    if not session_token:
+        return jsonify({"authenticated": False}), 401
+    
+    username = user_manager.verify_session(session_token)
+    
+    if not username:
+        return jsonify({"authenticated": False}), 401
+    
+    user_info = user_manager.get_user_info(username)
+    return jsonify({
+        "authenticated": True,
+        "user": user_info
+    }), 200
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CHAT HISTORY ENDPOINTS
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.route('/api/chats', methods=['GET'])
+def list_chats():
+    """List all chats for authenticated user"""
+    session_token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    username = user_manager.verify_session(session_token)
+    
+    if not username:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    chats = chat_manager.list_user_chats(username)
+    return jsonify({"chats": chats}), 200
+
+
+@app.route('/api/chats', methods=['POST'])
+def create_chat():
+    """Create a new chat"""
+    session_token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    username = user_manager.verify_session(session_token)
+    
+    if not username:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    data = request.get_json() or {}
+    title = data.get('title', 'New Chat')
+    
+    chat_id = chat_manager.create_chat(username, title)
+    return jsonify({"chat_id": chat_id, "title": title}), 201
+
+
+@app.route('/api/chats/<chat_id>', methods=['GET'])
+def get_chat(chat_id):
+    """Get a specific chat"""
+    session_token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    username = user_manager.verify_session(session_token)
+    
+    if not username:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    chat = chat_manager.get_chat(username, chat_id)
+    
+    if not chat:
+        return jsonify({"error": "Chat not found"}), 404
+    
+    return jsonify(chat), 200
+
+
+@app.route('/api/chats/<chat_id>', methods=['DELETE'])
+def delete_chat(chat_id):
+    """Delete a chat"""
+    session_token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    username = user_manager.verify_session(session_token)
+    
+    if not username:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    if not chat_manager.delete_chat(username, chat_id):
+        return jsonify({"error": "Chat not found"}), 404
+    
+    return jsonify({"message": "Chat deleted"}), 200
+
+
+@app.route('/api/chats/<chat_id>/messages', methods=['POST'])
+def add_chat_message(chat_id):
+    """Add a message to a chat"""
+    session_token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    username = user_manager.verify_session(session_token)
+    
+    if not username:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    data = request.get_json() or {}
+    role = data.get('role', 'user')
+    content = data.get('content', '')
+    
+    if not content:
+        return jsonify({"error": "Message content required"}), 400
+    
+    if not chat_manager.add_message(username, chat_id, role, content):
+        return jsonify({"error": "Failed to add message"}), 500
+    
+    return jsonify({"message": "Message added"}), 201
+
 
 if __name__ == '__main__':
     port = int(os.getenv("PORT", "5000"))

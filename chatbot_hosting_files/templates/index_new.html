@@ -1,0 +1,973 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Derei Assistant</title>
+    <link rel="stylesheet" href="/static/design-system.css" />
+    <style>
+      /* ═══════════════════════════════════════════════════════════════════════
+         NEW RESPONSIVE THREE-COLUMN LAYOUT
+         ═══════════════════════════════════════════════════════════════════════ */
+
+      /* Login Screen */
+      .auth-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+      }
+
+      .auth-screen.hidden {
+        display: none;
+      }
+
+      .auth-container {
+        background: var(--surface);
+        border: var(--border-w) solid var(--border);
+        border-radius: 4px;
+        padding: var(--sp-10);
+        max-width: 380px;
+        width: 100%;
+        box-shadow: var(--shadow-sm);
+      }
+
+      .auth-container h1 {
+        font-size: var(--text-xl);
+        margin-bottom: var(--sp-4);
+        text-align: center;
+      }
+
+      .auth-form {
+        display: flex;
+        flex-direction: column;
+        gap: var(--sp-4);
+      }
+
+      .auth-form input {
+        padding: var(--sp-3);
+        border: var(--border-w) solid var(--border);
+        background: var(--surface);
+        font-size: var(--text-base);
+        border-radius: 0;
+      }
+
+      .auth-form input:focus {
+        outline: none;
+        border-color: var(--accent);
+      }
+
+      .auth-buttons {
+        display: flex;
+        gap: var(--sp-3);
+      }
+
+      .auth-buttons button {
+        flex: 1;
+        padding: var(--sp-3);
+        border: var(--border-w) solid var(--border);
+        background: var(--surface);
+        cursor: pointer;
+        font-family: "DM Sans", sans-serif;
+        font-weight: var(--fw-medium);
+        text-transform: uppercase;
+        font-size: var(--text-xs);
+        letter-spacing: var(--ls-wide);
+        transition: all var(--trans-base);
+      }
+
+      .auth-buttons button.primary {
+        background: var(--accent);
+        color: var(--text-inverse);
+        border-color: var(--accent);
+      }
+
+      .auth-buttons button:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      .auth-buttons button.primary:hover {
+        background: var(--accent-hover);
+      }
+
+      .auth-error {
+        color: var(--error);
+        font-size: var(--text-xs);
+        margin-top: var(--sp-2);
+      }
+
+      /* Three-column layout */
+      .app {
+        display: grid;
+        grid-template-columns: 1fr 1fr 280px;
+        height: 100vh;
+      }
+
+      /* Left sidebar - Chat history */
+      .sidebar-left {
+        background: var(--surface);
+        border-right: var(--border-w) solid var(--border);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      .sidebar-left-header {
+        padding: var(--sp-4);
+        border-bottom: var(--border-w) solid var(--border);
+      }
+
+      .sidebar-left-header h2 {
+        font-size: var(--text-base);
+        margin-bottom: var(--sp-2);
+      }
+
+      .btn-new-chat {
+        width: 100%;
+        padding: var(--sp-3);
+        background: var(--accent);
+        color: var(--text-inverse);
+        border: none;
+        cursor: pointer;
+        font-weight: var(--fw-medium);
+        font-size: var(--text-xs);
+        text-transform: uppercase;
+        letter-spacing: var(--ls-wide);
+        transition: all var(--trans-base);
+      }
+
+      .btn-new-chat:hover {
+        background: var(--accent-hover);
+      }
+
+      .chats-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: var(--sp-2);
+      }
+
+      .chat-item {
+        padding: var(--sp-3);
+        margin-bottom: var(--sp-2);
+        background: var(--surface-dim);
+        border-left: 2px solid transparent;
+        cursor: pointer;
+        transition: all var(--trans-base);
+        font-size: var(--text-sm);
+      }
+
+      .chat-item:hover {
+        background: var(--bg);
+        border-left-color: var(--accent);
+      }
+
+      .chat-item.active {
+        background: var(--accent-tint);
+        border-left-color: var(--accent);
+      }
+
+      .chat-item-title {
+        font-weight: var(--fw-medium);
+        margin-bottom: var(--sp-1);
+      }
+
+      .chat-item-meta {
+        font-size: var(--text-xs);
+        color: var(--text-dim);
+      }
+
+      .sidebar-left-footer {
+        padding: var(--sp-3);
+        border-top: var(--border-w) solid var(--border);
+        display: flex;
+        gap: var(--sp-2);
+      }
+
+      .sidebar-left-footer button {
+        flex: 1;
+        padding: var(--sp-2);
+        font-size: var(--text-xs);
+        border: var(--border-w) solid var(--border);
+        background: var(--surface);
+        cursor: pointer;
+        transition: all var(--trans-base);
+      }
+
+      .sidebar-left-footer button:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      /* Main chat area */
+      .chat-area {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        background: var(--bg);
+      }
+
+      .chat-messages-container {
+        flex: 1;
+        overflow-y: auto;
+        padding: var(--sp-6);
+      }
+
+      .chat-messages {
+        display: flex;
+        flex-direction: column;
+        gap: var(--sp-4);
+      }
+
+      .message {
+        animation: slideIn 0.2s ease-out;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .message.user {
+        align-self: flex-end;
+        max-width: 70%;
+      }
+
+      .message.assistant {
+        align-self: flex-start;
+        max-width: 85%;
+      }
+
+      .message-content {
+        padding: var(--sp-4);
+        background: var(--surface);
+        border: var(--border-w) solid var(--border);
+        word-wrap: break-word;
+        line-height: var(--lh-loose);
+      }
+
+      .message.user .message-content {
+        background: var(--accent-tint);
+        border-color: var(--accent);
+      }
+
+      .message-time {
+        font-size: var(--text-xs);
+        color: var(--text-dim);
+        margin-top: var(--sp-2);
+      }
+
+      /* Chat input area - vertical expansion */
+      .chat-input-area {
+        padding: var(--sp-6);
+        background: var(--surface);
+        border-top: var(--border-w) solid var(--border);
+      }
+
+      .input-row {
+        display: flex;
+        gap: var(--sp-3);
+        align-items: flex-end;
+        max-height: 200px;
+      }
+
+      .input-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: var(--sp-2);
+        max-height: 200px;
+      }
+
+      .text-input-wrapper {
+        display: flex;
+        gap: var(--sp-2);
+        flex: 1;
+        align-items: flex-end;
+      }
+
+      .chat-input {
+        flex: 1;
+        padding: var(--sp-3);
+        border: var(--border-w) solid var(--border);
+        background: var(--surface-dim);
+        font-family: "DM Sans", sans-serif;
+        font-size: var(--text-base);
+        resize: none;
+        max-height: 120px;
+        min-height: 40px;
+        overflow-y: auto;
+      }
+
+      .chat-input:focus {
+        outline: none;
+        border-color: var(--accent);
+        background: var(--surface);
+      }
+
+      .btn-attach {
+        padding: var(--sp-3);
+        width: 40px;
+        height: 40px;
+        border: var(--border-w) solid var(--border);
+        background: var(--surface);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all var(--trans-base);
+      }
+
+      .btn-attach:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      .btn-attach svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      .chat-send {
+        padding: var(--sp-3) var(--sp-4);
+        background: var(--accent);
+        color: var(--text-inverse);
+        border: none;
+        cursor: pointer;
+        font-weight: var(--fw-medium);
+        text-transform: uppercase;
+        font-size: var(--text-xs);
+        letter-spacing: var(--ls-wide);
+        transition: all var(--trans-base);
+        white-space: nowrap;
+      }
+
+      .chat-send:hover {
+        background: var(--accent-hover);
+      }
+
+      /* Right sidebar - Model selector + options */
+      .sidebar-right {
+        background: var(--surface);
+        border-left: var(--border-w) solid var(--border);
+        padding: var(--sp-4);
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: var(--sp-6);
+      }
+
+      .sidebar-right h3 {
+        font-size: var(--text-sm);
+        margin-bottom: var(--sp-3);
+      }
+
+      .model-selector {
+        display: flex;
+        flex-direction: column;
+        gap: var(--sp-3);
+      }
+
+      .model-label {
+        font-size: var(--text-xs);
+        text-transform: uppercase;
+        letter-spacing: var(--ls-wide);
+        color: var(--text-dim);
+      }
+
+      .model-select {
+        padding: var(--sp-2);
+        border: var(--border-w) solid var(--border);
+        background: var(--surface);
+        font-size: var(--text-sm);
+        cursor: pointer;
+      }
+
+      .model-summary {
+        font-size: var(--text-xs);
+        color: var(--text-secondary);
+        line-height: var(--lh-normal);
+      }
+
+      .voice-controls {
+        display: flex;
+        flex-direction: column;
+        gap: var(--sp-2);
+      }
+
+      .voice-btn {
+        padding: var(--sp-2) var(--sp-3);
+        border: var(--border-w) solid var(--border);
+        background: var(--surface);
+        cursor: pointer;
+        font-size: var(--text-xs);
+        text-transform: uppercase;
+        letter-spacing: var(--ls-wide);
+        transition: all var(--trans-base);
+      }
+
+      .voice-btn:hover {
+        border-color: var(--accent);
+      }
+
+      .voice-btn.active {
+        background: var(--accent-tint);
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      @media (max-width: 1200px) {
+        .app {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar-left,
+        .sidebar-right {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- LOGIN SCREEN -->
+    <div class="auth-screen" id="authScreen">
+      <div class="auth-container">
+        <h1>Derei Assistant</h1>
+        <div class="auth-form" id="loginForm">
+          <input
+            type="text"
+            id="loginUsername"
+            placeholder="Username"
+            autocomplete="username"
+          />
+          <input
+            type="password"
+            id="loginPassword"
+            placeholder="Password"
+            autocomplete="current-password"
+          />
+          <div class="auth-buttons">
+            <button class="primary" onclick="handleLogin()">Login</button>
+            <button onclick="switchToSignup()">Sign Up</button>
+          </div>
+          <div class="auth-error" id="authError"></div>
+        </div>
+        <div class="auth-form" id="signupForm" style="display: none">
+          <input
+            type="text"
+            id="signupUsername"
+            placeholder="Username"
+            autocomplete="username"
+          />
+          <input
+            type="email"
+            id="signupEmail"
+            placeholder="Email"
+            autocomplete="email"
+          />
+          <input
+            type="password"
+            id="signupPassword"
+            placeholder="Password (min. 6 chars)"
+            autocomplete="new-password"
+          />
+          <div class="auth-buttons">
+            <button class="primary" onclick="handleSignup()">
+              Create Account
+            </button>
+            <button onclick="switchToLogin()">Back to Login</button>
+          </div>
+          <div class="auth-error" id="signupError"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div class="app" id="mainApp" style="display: none">
+      <!-- LEFT SIDEBAR - CHAT HISTORY -->
+      <aside class="sidebar-left">
+        <div class="sidebar-left-header">
+          <h2>Chats</h2>
+          <button class="btn-new-chat" onclick="createNewChat()">
+            + New Chat
+          </button>
+        </div>
+        <div class="chats-list" id="chatsList"></div>
+        <div class="sidebar-left-footer">
+          <button onclick="showAccountInfo()">Account</button>
+          <button onclick="handleLogout()">Logout</button>
+        </div>
+      </aside>
+
+      <!-- CENTER - CHAT AREA -->
+      <div class="chat-area">
+        <div class="chat-messages-container">
+          <div class="chat-messages" id="chatMessages">
+            <div class="empty-state" id="chatEmptyState">
+              <svg width="100" height="100" viewBox="0 0 100 100">
+                <rect x="10" y="20" width="55" height="45" rx="4" />
+                <line x1="20" y1="35" x2="55" y2="35" />
+                <line x1="20" y1="45" x2="55" y2="45" />
+                <line x1="20" y1="55" x2="40" y2="55" />
+                <rect x="35" y="38" width="55" height="40" rx="4" />
+                <line x1="45" y1="52" x2="80" y2="52" />
+                <line x1="45" y1="62" x2="75" y2="62" />
+              </svg>
+              <p>Start a conversation</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- CHAT INPUT -->
+        <div class="chat-input-area">
+          <div
+            id="attachedFileDisplay"
+            style="display: none; margin-bottom: var(--sp-3)"
+          >
+            <span id="attachedFileName"></span>
+            <button
+              onclick="removeAttachedFile()"
+              style="margin-left: var(--sp-2)"
+            >
+              ✕ Remove
+            </button>
+          </div>
+          <div class="input-row">
+            <div class="input-container">
+              <div class="text-input-wrapper">
+                <input
+                  type="file"
+                  id="fileInput"
+                  style="display: none"
+                  onchange="handleFileSelect(event)"
+                />
+                <button
+                  class="btn-attach"
+                  id="btnAttach"
+                  onclick="document.getElementById('fileInput').click()"
+                  title="Attach file"
+                >
+                  <svg viewBox="0 0 16 16">
+                    <path
+                      d="M13 7l-5 5a3.5 3.5 0 01-5-5l5-5a2 2 0 013 3l-5 5a.5.5 0 01-1-1l4-4"
+                    />
+                  </svg>
+                </button>
+                <textarea
+                  class="chat-input"
+                  id="chatInput"
+                  placeholder="Ask anything…"
+                  autocomplete="off"
+                  onkeydown="handleInputKeydown(event)"
+                ></textarea>
+              </div>
+            </div>
+            <button class="chat-send" id="chatSend" onclick="sendMessage()">
+              Send
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT SIDEBAR - MODEL SELECTOR & OPTIONS -->
+      <aside class="sidebar-right">
+        <div>
+          <h3>AI Model</h3>
+          <div class="model-selector">
+            <div class="model-label">Select Model:</div>
+            <select
+              id="chatModelSelect"
+              class="model-select"
+              onchange="updateModelInfo()"
+            ></select>
+            <div class="model-summary" id="chatModelSummary">
+              Loading available Groq models...
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h3>Voice</h3>
+          <div class="voice-controls">
+            <button
+              class="voice-btn"
+              id="voiceInputBtn"
+              onclick="toggleVoiceInput()"
+            >
+              🎤 Microphone
+            </button>
+            <button
+              class="voice-btn active"
+              id="voiceReplyToggle"
+              onclick="toggleVoiceOutput()"
+            >
+              🔊 Voice Reply
+            </button>
+          </div>
+          <div
+            id="voiceStatus"
+            style="
+              font-size: var(--text-xs);
+              color: var(--text-dim);
+              margin-top: var(--sp-2);
+            "
+          ></div>
+        </div>
+      </aside>
+    </div>
+
+    <script>
+      // ═══════════════════════════════════════════════════════════════════════
+      // AUTHENTICATION LOGIC
+      // ═══════════════════════════════════════════════════════════════════════
+
+      let currentUser = null;
+      let currentChatId = null;
+      let sessionToken = localStorage.getItem("sessionToken");
+
+      window.addEventListener("load", () => {
+        if (sessionToken) {
+          verifySession();
+        } else {
+          showAuthScreen();
+        }
+      });
+
+      async function verifySession() {
+        try {
+          const response = await fetch("/api/auth/verify", {
+            headers: { Authorization: `Bearer ${sessionToken}` },
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            currentUser = data.user;
+            showMainApp();
+            loadChatsList();
+          } else {
+            sessionToken = null;
+            localStorage.removeItem("sessionToken");
+            showAuthScreen();
+          }
+        } catch (error) {
+          console.error("Session verification failed:", error);
+          showAuthScreen();
+        }
+      }
+
+      function switchToSignup() {
+        document.getElementById("loginForm").style.display = "none";
+        document.getElementById("signupForm").style.display = "flex";
+        clearAuthErrors();
+      }
+
+      function switchToLogin() {
+        document.getElementById("signupForm").style.display = "none";
+        document.getElementById("loginForm").style.display = "flex";
+        clearAuthErrors();
+      }
+
+      function clearAuthErrors() {
+        document.getElementById("authError").textContent = "";
+        document.getElementById("signupError").textContent = "";
+      }
+
+      async function handleLogin() {
+        const username = document.getElementById("loginUsername").value.trim();
+        const password = document.getElementById("loginPassword").value;
+
+        if (!username || !password) {
+          document.getElementById("authError").textContent =
+            "Please enter username and password";
+          return;
+        }
+
+        try {
+          const response = await fetch("/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            document.getElementById("authError").textContent =
+              data.error || "Login failed";
+            return;
+          }
+
+          sessionToken = data.session_token;
+          localStorage.setItem("sessionToken", sessionToken);
+          currentUser = { username };
+
+          showMainApp();
+          loadChatsList();
+        } catch (error) {
+          document.getElementById("authError").textContent = "Connection error";
+          console.error("Login error:", error);
+        }
+      }
+
+      async function handleSignup() {
+        const username = document.getElementById("signupUsername").value.trim();
+        const email = document.getElementById("signupEmail").value.trim();
+        const password = document.getElementById("signupPassword").value;
+
+        if (!username || !email || !password) {
+          document.getElementById("signupError").textContent =
+            "Please fill in all fields";
+          return;
+        }
+
+        try {
+          const response = await fetch("/api/auth/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, email, password }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            document.getElementById("signupError").textContent =
+              data.error || "Signup failed";
+            return;
+          }
+
+          // Auto-login after signup
+          await handleLogin();
+          document.getElementById("signupUsername").value = "";
+          document.getElementById("signupEmail").value = "";
+          document.getElementById("signupPassword").value = "";
+        } catch (error) {
+          document.getElementById("signupError").textContent =
+            "Connection error";
+          console.error("Signup error:", error);
+        }
+      }
+
+      async function handleLogout() {
+        if (!confirm("Are you sure you want to logout?")) return;
+
+        try {
+          await fetch("/api/auth/logout", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ session_token: sessionToken }),
+          });
+        } catch (error) {
+          console.error("Logout error:", error);
+        }
+
+        sessionToken = null;
+        localStorage.removeItem("sessionToken");
+        currentUser = null;
+        currentChatId = null;
+        showAuthScreen();
+      }
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // UI SCREEN MANAGEMENT
+      // ═══════════════════════════════════════════════════════════════════════
+
+      function showAuthScreen() {
+        document.getElementById("authScreen").classList.remove("hidden");
+        document.getElementById("mainApp").style.display = "none";
+      }
+
+      function showMainApp() {
+        document.getElementById("authScreen").classList.add("hidden");
+        document.getElementById("mainApp").style.display = "grid";
+      }
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // CHAT MANAGEMENT
+      // ═══════════════════════════════════════════════════════════════════════
+
+      async function loadChatsList() {
+        try {
+          const response = await fetch("/api/chats", {
+            headers: { Authorization: `Bearer ${sessionToken}` },
+          });
+
+          if (!response.ok) return;
+
+          const data = await response.json();
+          const chatsList = document.getElementById("chatsList");
+          chatsList.innerHTML = "";
+
+          if (data.chats.length === 0) {
+            chatsList.innerHTML =
+              '<p style="padding: var(--sp-4); color: var(--text-dim);">No chats yet</p>';
+            return;
+          }
+
+          data.chats.forEach((chat) => {
+            const item = document.createElement("div");
+            item.className =
+              "chat-item" + (chat.id === currentChatId ? " active" : "");
+            item.innerHTML = `
+              <div class="chat-item-title">${escapeHtml(chat.title)}</div>
+              <div class="chat-item-meta">${chat.message_count} messages</div>
+            `;
+            item.onclick = () => loadChat(chat.id);
+            chatsList.appendChild(item);
+          });
+        } catch (error) {
+          console.error("Error loading chats:", error);
+        }
+      }
+
+      async function createNewChat() {
+        try {
+          const response = await fetch("/api/chats", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${sessionToken}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ title: new Date().toLocaleString() }),
+          });
+
+          if (!response.ok) return;
+
+          const data = await response.json();
+          currentChatId = data.chat_id;
+
+          document.getElementById("chatMessages").innerHTML =
+            '<div class="empty-state" id="chatEmptyState"><svg width="100" height="100" viewBox="0 0 100 100"><rect x="10" y="20" width="55" height="45" rx="4" /><line x1="20" y1="35" x2="55" y2="35" /><line x1="20" y1="45" x2="55" y2="45" /><line x1="20" y1="55" x2="40" y2="55" /><rect x="35" y="38" width="55" height="40" rx="4" /><line x1="45" y1="52" x2="80" y2="52" /><line x1="45" y1="62" x2="75" y2="62" /></svg><p>Start a conversation</p></div>';
+
+          loadChatsList();
+        } catch (error) {
+          console.error("Error creating chat:", error);
+        }
+      }
+
+      async function loadChat(chatId) {
+        try {
+          const response = await fetch(`/api/chats/${chatId}`, {
+            headers: { Authorization: `Bearer ${sessionToken}` },
+          });
+
+          if (!response.ok) return;
+
+          const chat = await response.json();
+          currentChatId = chatId;
+
+          const messagesContainer = document.getElementById("chatMessages");
+          messagesContainer.innerHTML = "";
+
+          if (chat.messages.length === 0) {
+            messagesContainer.innerHTML =
+              '<div class="empty-state"><p>Start chatting</p></div>';
+          } else {
+            chat.messages.forEach((msg) => {
+              const msgEl = createMessageElement(
+                msg.role,
+                msg.content,
+                msg.timestamp,
+              );
+              messagesContainer.appendChild(msgEl);
+            });
+            messagesContainer.parentElement.scrollTop =
+              messagesContainer.parentElement.scrollHeight;
+          }
+
+          loadChatsList();
+        } catch (error) {
+          console.error("Error loading chat:", error);
+        }
+      }
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // MESSAGE HANDLING
+      // ═══════════════════════════════════════════════════════════════════════
+
+      function createMessageElement(role, content, timestamp) {
+        const msgEl = document.createElement("div");
+        msgEl.className = `message ${role}`;
+        msgEl.innerHTML = `
+          <div class="message-content">${escapeHtml(content)}</div>
+          ${timestamp ? `<div class="message-time">${new Date(timestamp).toLocaleTimeString()}</div>` : ""}
+        `;
+        return msgEl;
+      }
+
+      function handleInputKeydown(event) {
+        if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+          sendMessage();
+        }
+      }
+
+      async function sendMessage() {
+        const input = document.getElementById("chatInput");
+        const message = input.value.trim();
+
+        if (!message || !currentChatId) return;
+
+        input.value = "";
+        input.style.height = "auto";
+
+        // Hide empty state
+        const emptyState = document.getElementById("chatEmptyState");
+        if (emptyState) emptyState.style.display = "none";
+
+        // Add user message to display
+        const messagesContainer = document.getElementById("chatMessages");
+        const userMsgEl = createMessageElement("user", message);
+        messagesContainer.appendChild(userMsgEl);
+        messagesContainer.parentElement.scrollTop =
+          messagesContainer.parentElement.scrollHeight;
+
+        // Save user message
+        try {
+          await fetch(`/api/chats/${currentChatId}/messages`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${sessionToken}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ role: "user", content: message }),
+          });
+        } catch (error) {
+          console.error("Error saving message:", error);
+        }
+      }
+
+      function escapeHtml(text) {
+        const map = {
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#039;",
+        };
+        return text.replace(/[&<>"']/g, (m) => map[m]);
+      }
+
+      // Textarea auto-expand (up to limit)
+      document.addEventListener("DOMContentLoaded", () => {
+        const textarea = document.getElementById("chatInput");
+        textarea.addEventListener("input", () => {
+          textarea.style.height = "auto";
+          const newHeight = Math.min(textarea.scrollHeight, 120);
+          textarea.style.height = newHeight + "px";
+        });
+      });
+    </script>
+  </body>
+</html>
