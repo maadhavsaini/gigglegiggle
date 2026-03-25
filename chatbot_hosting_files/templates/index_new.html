@@ -103,20 +103,58 @@
         margin-top: var(--sp-2);
       }
 
-      /* Three-column layout */
+      /* MAIN APP LAYOUT */
       .app {
         display: grid;
-        grid-template-columns: 1fr 1fr 280px;
+        grid-template-columns: 220px 1fr 280px;
+        grid-template-rows: 60px 1fr 120px;
         height: 100vh;
+        gap: 0;
       }
 
-      /* Left sidebar - Chat history */
+      /* HEADER/TAB NAVIGATION */
+      .app-header {
+        grid-column: 1 / -1;
+        background: var(--surface);
+        border-bottom: var(--border-w) solid var(--border);
+        display: flex;
+        align-items: center;
+        padding: 0 var(--sp-4);
+        gap: var(--sp-4);
+        overflow-x: auto;
+      }
+
+      .tab-btn {
+        padding: var(--sp-2) var(--sp-3);
+        background: transparent;
+        border: none;
+        border-bottom: 2px solid transparent;
+        cursor: pointer;
+        font-size: var(--text-xs);
+        text-transform: uppercase;
+        letter-spacing: var(--ls-wide);
+        color: var(--text-dim);
+        transition: all var(--trans-base);
+        white-space: nowrap;
+      }
+
+      .tab-btn:hover {
+        color: var(--text);
+      }
+
+      .tab-btn.active {
+        color: var(--accent);
+        border-bottom-color: var(--accent);
+      }
+
+      /* LEFT SIDEBAR - CHAT HISTORY */
       .sidebar-left {
+        grid-row: 2;
+        grid-column: 1;
         background: var(--surface);
         border-right: var(--border-w) solid var(--border);
         display: flex;
         flex-direction: column;
-        height: 100%;
         overflow: hidden;
       }
 
@@ -132,7 +170,7 @@
 
       .btn-new-chat {
         width: 100%;
-        padding: var(--sp-3);
+        padding: var(--sp-2);
         background: var(--accent);
         color: var(--text-inverse);
         border: none;
@@ -155,13 +193,13 @@
       }
 
       .chat-item {
-        padding: var(--sp-3);
-        margin-bottom: var(--sp-2);
+        padding: var(--sp-2);
+        margin-bottom: var(--sp-1);
         background: var(--surface-dim);
         border-left: 2px solid transparent;
         cursor: pointer;
         transition: all var(--trans-base);
-        font-size: var(--text-sm);
+        font-size: var(--text-xs);
       }
 
       .chat-item:hover {
@@ -174,25 +212,16 @@
         border-left-color: var(--accent);
       }
 
-      .chat-item-title {
-        font-weight: var(--fw-medium);
-        margin-bottom: var(--sp-1);
-      }
-
-      .chat-item-meta {
-        font-size: var(--text-xs);
-        color: var(--text-dim);
-      }
-
       .sidebar-left-footer {
         padding: var(--sp-3);
         border-top: var(--border-w) solid var(--border);
         display: flex;
+        flex-direction: column;
         gap: var(--sp-2);
       }
 
       .sidebar-left-footer button {
-        flex: 1;
+        width: 100%;
         padding: var(--sp-2);
         font-size: var(--text-xs);
         border: var(--border-w) solid var(--border);
@@ -206,12 +235,21 @@
         color: var(--accent);
       }
 
-      /* Main chat area */
-      .chat-area {
+      /* CENTER - CONTENT AREA */
+      .content-area {
+        grid-row: 2;
+        grid-column: 2;
+        background: var(--bg);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      /* Chat View */
+      .chat-view {
         display: flex;
         flex-direction: column;
         height: 100%;
-        background: var(--bg);
       }
 
       .chat-messages-container {
@@ -243,7 +281,7 @@
 
       .message.user {
         align-self: flex-end;
-        max-width: 70%;
+        max-width: 75%;
       }
 
       .message.assistant {
@@ -256,6 +294,7 @@
         background: var(--surface);
         border: var(--border-w) solid var(--border);
         word-wrap: break-word;
+        white-space: pre-wrap;
         line-height: var(--lh-loose);
       }
 
@@ -270,32 +309,44 @@
         margin-top: var(--sp-2);
       }
 
-      /* Chat input area - vertical expansion */
-      .chat-input-area {
-        padding: var(--sp-6);
-        background: var(--surface);
-        border-top: var(--border-w) solid var(--border);
+      .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: var(--text-dim);
+        text-align: center;
       }
 
-      .input-row {
+      /* Other Views - Scrollable Content */
+      .feature-view {
+        display: none;
+        flex-direction: column;
+        overflow-y: auto;
+        padding: var(--sp-6);
+      }
+
+      .feature-view.active {
+        display: flex;
+      }
+
+      /* BOTTOM - CHAT INPUT */
+      .chat-input-area {
+        grid-row: 3;
+        grid-column: 2;
+        background: var(--surface);
+        border-top: var(--border-w) solid var(--border);
+        padding: var(--sp-4);
         display: flex;
         gap: var(--sp-3);
         align-items: flex-end;
-        max-height: 200px;
       }
 
-      .input-container {
+      .input-wrapper {
         flex: 1;
         display: flex;
-        flex-direction: column;
         gap: var(--sp-2);
-        max-height: 200px;
-      }
-
-      .text-input-wrapper {
-        display: flex;
-        gap: var(--sp-2);
-        flex: 1;
         align-items: flex-end;
       }
 
@@ -307,9 +358,10 @@
         font-family: "DM Sans", sans-serif;
         font-size: var(--text-base);
         resize: none;
-        max-height: 120px;
+        max-height: 80px;
         min-height: 40px;
         overflow-y: auto;
+        white-space: pre-wrap;
       }
 
       .chat-input:focus {
@@ -319,7 +371,7 @@
       }
 
       .btn-attach {
-        padding: var(--sp-3);
+        padding: var(--sp-2);
         width: 40px;
         height: 40px;
         border: var(--border-w) solid var(--border);
@@ -342,7 +394,7 @@
       }
 
       .chat-send {
-        padding: var(--sp-3) var(--sp-4);
+        padding: var(--sp-2) var(--sp-4);
         background: var(--accent);
         color: var(--text-inverse);
         border: none;
@@ -359,8 +411,10 @@
         background: var(--accent-hover);
       }
 
-      /* Right sidebar - Model selector + options */
+      /* RIGHT SIDEBAR - MODEL SELECTOR & OPTIONS */
       .sidebar-right {
+        grid-row: 2;
+        grid-column: 3;
         background: var(--surface);
         border-left: var(--border-w) solid var(--border);
         padding: var(--sp-4);
@@ -372,6 +426,8 @@
 
       .sidebar-right h3 {
         font-size: var(--text-sm);
+        text-transform: uppercase;
+        letter-spacing: var(--ls-wide);
         margin-bottom: var(--sp-3);
       }
 
@@ -402,13 +458,15 @@
         line-height: var(--lh-normal);
       }
 
-      .voice-controls {
+      .voice-controls,
+      .info-section {
         display: flex;
         flex-direction: column;
         gap: var(--sp-2);
       }
 
-      .voice-btn {
+      .voice-btn,
+      .info-btn {
         padding: var(--sp-2) var(--sp-3);
         border: var(--border-w) solid var(--border);
         background: var(--surface);
@@ -419,12 +477,131 @@
         transition: all var(--trans-base);
       }
 
-      .voice-btn:hover {
+      .voice-btn:hover,
+      .info-btn:hover {
         border-color: var(--accent);
       }
 
       .voice-btn.active {
         background: var(--accent-tint);
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      /* MODAL - Account Info */
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .modal.active {
+        display: flex;
+      }
+
+      .modal-content {
+        background: var(--surface);
+        border: var(--border-w) solid var(--border);
+        border-radius: 4px;
+        padding: var(--sp-8);
+        max-width: 400px;
+        box-shadow: 0 16px 32px rgba(0, 0, 0, 0.2);
+      }
+
+      .modal-content h2 {
+        margin-bottom: var(--sp-4);
+      }
+
+      .modal-content p {
+        margin-bottom: var(--sp-2);
+        font-size: var(--text-sm);
+      }
+
+      .modal-close-btn {
+        margin-top: var(--sp-4);
+        padding: var(--sp-2) var(--sp-4);
+        background: var(--accent);
+        color: var(--text-inverse);
+        border: none;
+        cursor: pointer;
+        width: 100%;
+      }
+
+      /* Feature Views */
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: var(--sp-2);
+        margin-bottom: var(--sp-4);
+      }
+
+      .form-group label {
+        font-size: var(--text-xs);
+        text-transform: uppercase;
+        letter-spacing: var(--ls-wide);
+        color: var(--text-dim);
+      }
+
+      .form-group input,
+      .form-group textarea,
+      .form-group select {
+        padding: var(--sp-3);
+        border: var(--border-w) solid var(--border);
+        background: var(--surface);
+        font-size: var(--text-base);
+        font-family: "DM Sans", sans-serif;
+      }
+
+      .todo-item,
+      .note-item,
+      .news-item {
+        padding: var(--sp-3);
+        background: var(--surface-dim);
+        border: var(--border-w) solid var(--border);
+        margin-bottom: var(--sp-2);
+      }
+
+      .todo-item button {
+        margin-left: var(--sp-2);
+        padding: var(--sp-1) var(--sp-2);
+        font-size: var(--text-xs);
+        background: var(--error);
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+
+      .btn {
+        padding: var(--sp-3);
+        background: var(--accent);
+        color: var(--text-inverse);
+        border: none;
+        cursor: pointer;
+        font-weight: var(--fw-medium);
+        text-transform: uppercase;
+        font-size: var(--text-xs);
+        letter-spacing: var(--ls-wide);
+        margin-bottom: var(--sp-3);
+      }
+
+      .btn:hover {
+        background: var(--accent-hover);
+      }
+
+      .btn.secondary {
+        background: transparent;
+        color: var(--text);
+        border: var(--border-w) solid var(--border);
+      }
+
+      .btn.secondary:hover {
         border-color: var(--accent);
         color: var(--accent);
       }
@@ -497,6 +674,21 @@
 
     <!-- MAIN APP -->
     <div class="app" id="mainApp" style="display: none">
+      <!-- HEADER/TABS -->
+      <div class="app-header">
+        <button class="tab-btn active" onclick="switchTab('chat')">
+          💬 Chat
+        </button>
+        <button class="tab-btn" onclick="switchTab('search')">🔍 Search</button>
+        <button class="tab-btn" onclick="switchTab('todo')">✓ Todo</button>
+        <button class="tab-btn" onclick="switchTab('notes')">📝 Notes</button>
+        <button class="tab-btn" onclick="switchTab('medical')">
+          ⚕️ Medical
+        </button>
+        <button class="tab-btn" onclick="switchTab('deca')">📚 DECA</button>
+        <button class="tab-btn" onclick="switchTab('news')">📰 News</button>
+      </div>
+
       <!-- LEFT SIDEBAR - CHAT HISTORY -->
       <aside class="sidebar-left">
         <div class="sidebar-left-header">
@@ -512,77 +704,99 @@
         </div>
       </aside>
 
-      <!-- CENTER - CHAT AREA -->
-      <div class="chat-area">
-        <div class="chat-messages-container">
-          <div class="chat-messages" id="chatMessages">
-            <div class="empty-state" id="chatEmptyState">
-              <svg width="100" height="100" viewBox="0 0 100 100">
-                <rect x="10" y="20" width="55" height="45" rx="4" />
-                <line x1="20" y1="35" x2="55" y2="35" />
-                <line x1="20" y1="45" x2="55" y2="45" />
-                <line x1="20" y1="55" x2="40" y2="55" />
-                <rect x="35" y="38" width="55" height="40" rx="4" />
-                <line x1="45" y1="52" x2="80" y2="52" />
-                <line x1="45" y1="62" x2="75" y2="62" />
-              </svg>
-              <p>Start a conversation</p>
+      <!-- CENTER - CONTENT AREA -->
+      <div class="content-area">
+        <!-- CHAT VIEW -->
+        <div class="chat-view feature-view active" id="chatView">
+          <div class="chat-messages-container">
+            <div class="chat-messages" id="chatMessages">
+              <div class="empty-state">
+                <p>Start a conversation</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- CHAT INPUT -->
-        <div class="chat-input-area">
-          <div
-            id="attachedFileDisplay"
-            style="display: none; margin-bottom: var(--sp-3)"
-          >
-            <span id="attachedFileName"></span>
-            <button
-              onclick="removeAttachedFile()"
-              style="margin-left: var(--sp-2)"
-            >
-              ✕ Remove
+        <!-- SEARCH VIEW -->
+        <div class="feature-view" id="searchView">
+          <div class="form-group">
+            <label>Search Query</label>
+            <input
+              type="text"
+              id="searchQuery"
+              placeholder="What would you like to search for?"
+            />
+            <button class="btn" onclick="performSearch()">Search</button>
+          </div>
+          <div id="searchResults"></div>
+        </div>
+
+        <!-- TODO VIEW -->
+        <div class="feature-view" id="todoView">
+          <div class="form-group">
+            <label>Add Todo</label>
+            <input
+              type="text"
+              id="todoInput"
+              placeholder="What do you need to do?"
+            />
+            <button class="btn" onclick="addTodo()">Add Todo</button>
+          </div>
+          <div id="todoList"></div>
+        </div>
+
+        <!-- NOTES VIEW -->
+        <div class="feature-view" id="notesView">
+          <div class="form-group">
+            <label>Note Title</label>
+            <input type="text" id="noteTitle" placeholder="Note title..." />
+            <label>Content</label>
+            <textarea
+              id="noteContent"
+              placeholder="Write your note..."
+              style="min-height: 200px; resize: vertical"
+            ></textarea>
+            <button class="btn" onclick="saveNote()">Save Note</button>
+          </div>
+          <div id="notesList"></div>
+        </div>
+
+        <!-- MEDICAL VIEW -->
+        <div class="feature-view" id="medicalView">
+          <div class="form-group">
+            <label>Search Medical Condition</label>
+            <input
+              type="text"
+              id="medicalQuery"
+              placeholder="e.g., headache, fever..."
+            />
+            <button class="btn" onclick="lookupMedical()">Look Up</button>
+          </div>
+          <div id="medicalResults"></div>
+        </div>
+
+        <!-- DECA VIEW -->
+        <div class="feature-view" id="decaView">
+          <div class="form-group">
+            <label>DECA Practice</label>
+            <button class="btn" onclick="generateDeca()">
+              Generate Question
+            </button>
+            <button class="btn secondary" onclick="loadDecaSample()">
+              Load Sample
             </button>
           </div>
-          <div class="input-row">
-            <div class="input-container">
-              <div class="text-input-wrapper">
-                <input
-                  type="file"
-                  id="fileInput"
-                  style="display: none"
-                  onchange="handleFileSelect(event)"
-                />
-                <button
-                  class="btn-attach"
-                  id="btnAttach"
-                  onclick="document.getElementById('fileInput').click()"
-                  title="Attach file"
-                >
-                  <svg viewBox="0 0 16 16">
-                    <path
-                      d="M13 7l-5 5a3.5 3.5 0 01-5-5l5-5a2 2 0 013 3l-5 5a.5.5 0 01-1-1l4-4"
-                    />
-                  </svg>
-                </button>
-                <textarea
-                  class="chat-input"
-                  id="chatInput"
-                  placeholder="Ask anything…"
-                  autocomplete="off"
-                  onkeydown="handleInputKeydown(event)"
-                ></textarea>
-              </div>
-            </div>
-            <button class="chat-send" id="chatSend" onclick="sendMessage()">
-              Send
-            </button>
-          </div>
+          <div id="decaContent"></div>
+        </div>
+
+        <!-- NEWS VIEW -->
+        <div class="feature-view" id="newsView">
+          <button class="btn" onclick="loadNews()">Load Latest News</button>
+          <div id="newsList" style="margin-top: var(--sp-4)"></div>
         </div>
       </div>
 
-      <!-- RIGHT SIDEBAR - MODEL SELECTOR & OPTIONS -->
+      <!-- RIGHT SIDEBAR - MODEL SELECTOR -->
       <aside class="sidebar-right">
         <div>
           <h3>AI Model</h3>
@@ -594,7 +808,7 @@
               onchange="updateModelInfo()"
             ></select>
             <div class="model-summary" id="chatModelSummary">
-              Loading available Groq models...
+              Loading available models...
             </div>
           </div>
         </div>
@@ -619,24 +833,82 @@
           </div>
           <div
             id="voiceStatus"
-            style="
-              font-size: var(--text-xs);
-              color: var(--text-dim);
-              margin-top: var(--sp-2);
-            "
+            style="font-size: var(--text-xs); color: var(--text-dim)"
           ></div>
         </div>
+
+        <div class="info-section">
+          <h3>Account</h3>
+          <div
+            id="accountInfo"
+            style="font-size: var(--text-xs); margin-bottom: var(--sp-2)"
+          >
+            <p id="accountUsername"></p>
+            <p id="accountChatCount"></p>
+          </div>
+        </div>
       </aside>
+
+      <!-- CHAT INPUT (only visible in chat view) -->
+      <div class="chat-input-area" id="chatInputArea">
+        <div class="input-wrapper">
+          <input
+            type="file"
+            id="fileInput"
+            style="display: none"
+            onchange="handleFileSelect(event)"
+          />
+          <button
+            class="btn-attach"
+            onclick="document.getElementById('fileInput').click()"
+            title="Attach file"
+          >
+            <svg viewBox="0 0 16 16">
+              <path
+                d="M13 7l-5 5a3.5 3.5 0 01-5-5l5-5a2 2 0 013 3l-5 5a.5.5 0 01-1-1l4-4"
+              />
+            </svg>
+          </button>
+          <textarea
+            class="chat-input"
+            id="chatInput"
+            placeholder="Ask anything…"
+            onkeydown="handleInputKeydown(event)"
+          ></textarea>
+        </div>
+        <button class="chat-send" onclick="sendMessage()">Send</button>
+      </div>
+    </div>
+
+    <!-- ACCOUNT INFO MODAL -->
+    <div class="modal" id="accountModal">
+      <div class="modal-content">
+        <h2>Account Information</h2>
+        <p><strong>Username:</strong> <span id="modalUsername"></span></p>
+        <p><strong>Total Chats:</strong> <span id="modalChatCount"></span></p>
+        <p><strong>Logged In:</strong> <span id="modalLoginTime"></span></p>
+        <button class="modal-close-btn" onclick="closeAccountModal()">
+          Close
+        </button>
+      </div>
     </div>
 
     <script>
       // ═══════════════════════════════════════════════════════════════════════
-      // AUTHENTICATION LOGIC
+      // GLOBAL STATE
       // ═══════════════════════════════════════════════════════════════════════
 
       let currentUser = null;
       let currentChatId = null;
       let sessionToken = localStorage.getItem("sessionToken");
+      let currentTab = "chat";
+      let voiceReplyEnabled = true;
+      let selectedModel = "llama-3.3-70b-versatile";
+      let allModels = [];
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // INITIALIZATION
+      // ═══════════════════════════════════════════════════════════════════════
 
       window.addEventListener("load", () => {
         if (sessionToken) {
@@ -657,6 +929,8 @@
             currentUser = data.user;
             showMainApp();
             loadChatsList();
+            loadAvailableModels();
+            updateAccountInfo();
           } else {
             sessionToken = null;
             localStorage.removeItem("sessionToken");
@@ -668,19 +942,67 @@
         }
       }
 
+      async function loadAvailableModels() {
+        try {
+          const response = await fetch("/api/groq-models");
+          if (response.ok) {
+            const data = await response.json();
+            allModels = data.models || [];
+            const select = document.getElementById("chatModelSelect");
+            select.innerHTML = "";
+
+            allModels.forEach((model) => {
+              const option = document.createElement("option");
+              option.value = model.id;
+              option.textContent = model.friendly_name || model.id;
+              select.appendChild(option);
+            });
+
+            if (select.options.length > 0) {
+              select.value = selectedModel;
+              updateModelInfo();
+            }
+          }
+        } catch (error) {
+          console.error("Error loading models:", error);
+          document.getElementById("chatModelSummary").textContent =
+            "Unable to load models";
+        }
+      }
+
+      function updateModelInfo() {
+        selectedModel = document.getElementById("chatModelSelect").value;
+        const model = allModels.find((m) => m.id === selectedModel);
+
+        if (model) {
+          document.getElementById("chatModelSummary").textContent =
+            model.description || "No description available";
+        }
+      }
+
+      function updateAccountInfo() {
+        if (currentUser) {
+          document.getElementById("accountUsername").textContent =
+            `User: ${currentUser.username}`;
+          document.getElementById("accountChatCount").textContent =
+            `${currentUser.chats?.length || 0} chats`;
+        }
+      }
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // AUTHENTICATION
+      // ═══════════════════════════════════════════════════════════════════════
+
       function switchToSignup() {
         document.getElementById("loginForm").style.display = "none";
         document.getElementById("signupForm").style.display = "flex";
-        clearAuthErrors();
+        document.getElementById("authError").textContent = "";
+        document.getElementById("signupError").textContent = "";
       }
 
       function switchToLogin() {
         document.getElementById("signupForm").style.display = "none";
         document.getElementById("loginForm").style.display = "flex";
-        clearAuthErrors();
-      }
-
-      function clearAuthErrors() {
         document.getElementById("authError").textContent = "";
         document.getElementById("signupError").textContent = "";
       }
@@ -716,6 +1038,8 @@
 
           showMainApp();
           loadChatsList();
+          loadAvailableModels();
+          updateAccountInfo();
         } catch (error) {
           document.getElementById("authError").textContent = "Connection error";
           console.error("Login error:", error);
@@ -748,11 +1072,11 @@
             return;
           }
 
-          // Auto-login after signup
-          await handleLogin();
           document.getElementById("signupUsername").value = "";
           document.getElementById("signupEmail").value = "";
           document.getElementById("signupPassword").value = "";
+
+          await handleLogin();
         } catch (error) {
           document.getElementById("signupError").textContent =
             "Connection error";
@@ -781,7 +1105,7 @@
       }
 
       // ═══════════════════════════════════════════════════════════════════════
-      // UI SCREEN MANAGEMENT
+      // UI MANAGEMENT
       // ═══════════════════════════════════════════════════════════════════════
 
       function showAuthScreen() {
@@ -792,6 +1116,47 @@
       function showMainApp() {
         document.getElementById("authScreen").classList.add("hidden");
         document.getElementById("mainApp").style.display = "grid";
+      }
+
+      function switchTab(tabName) {
+        currentTab = tabName;
+
+        // Hide all views
+        document
+          .querySelectorAll(".feature-view")
+          .forEach((v) => v.classList.remove("active"));
+
+        // Show selected view
+        document.getElementById(tabName + "View").classList.add("active");
+
+        // Update tab buttons
+        document
+          .querySelectorAll(".tab-btn")
+          .forEach((btn) => btn.classList.remove("active"));
+        event.target.classList.add("active");
+
+        // Show/hide chat input
+        if (tabName === "chat") {
+          document.getElementById("chatInputArea").style.display = "flex";
+        } else {
+          document.getElementById("chatInputArea").style.display = "none";
+        }
+      }
+
+      function showAccountInfo() {
+        if (currentUser) {
+          document.getElementById("modalUsername").textContent =
+            currentUser.username;
+          document.getElementById("modalChatCount").textContent =
+            currentUser.chats?.length || 0;
+          document.getElementById("modalLoginTime").textContent =
+            new Date().toLocaleString();
+          document.getElementById("accountModal").classList.add("active");
+        }
+      }
+
+      function closeAccountModal() {
+        document.getElementById("accountModal").classList.remove("active");
       }
 
       // ═══════════════════════════════════════════════════════════════════════
@@ -820,10 +1185,7 @@
             const item = document.createElement("div");
             item.className =
               "chat-item" + (chat.id === currentChatId ? " active" : "");
-            item.innerHTML = `
-              <div class="chat-item-title">${escapeHtml(chat.title)}</div>
-              <div class="chat-item-meta">${chat.message_count} messages</div>
-            `;
+            item.innerHTML = `<strong>${escapeHtml(chat.title || "Untitled")}</strong><br><small>${chat.message_count || 0} messages</small>`;
             item.onclick = () => loadChat(chat.id);
             chatsList.appendChild(item);
           });
@@ -849,9 +1211,9 @@
           currentChatId = data.chat_id;
 
           document.getElementById("chatMessages").innerHTML =
-            '<div class="empty-state" id="chatEmptyState"><svg width="100" height="100" viewBox="0 0 100 100"><rect x="10" y="20" width="55" height="45" rx="4" /><line x1="20" y1="35" x2="55" y2="35" /><line x1="20" y1="45" x2="55" y2="45" /><line x1="20" y1="55" x2="40" y2="55" /><rect x="35" y="38" width="55" height="40" rx="4" /><line x1="45" y1="52" x2="80" y2="52" /><line x1="45" y1="62" x2="75" y2="62" /></svg><p>Start a conversation</p></div>';
-
+            '<div class="empty-state"><p>Start a conversation</p></div>';
           loadChatsList();
+          switchTab("chat");
         } catch (error) {
           console.error("Error creating chat:", error);
         }
@@ -893,10 +1255,6 @@
         }
       }
 
-      // ═══════════════════════════════════════════════════════════════════════
-      // MESSAGE HANDLING
-      // ═══════════════════════════════════════════════════════════════════════
-
       function createMessageElement(role, content, timestamp) {
         const msgEl = document.createElement("div");
         msgEl.className = `message ${role}`;
@@ -909,6 +1267,7 @@
 
       function handleInputKeydown(event) {
         if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+          event.preventDefault();
           sendMessage();
         }
       }
@@ -923,10 +1282,10 @@
         input.style.height = "auto";
 
         // Hide empty state
-        const emptyState = document.getElementById("chatEmptyState");
+        const emptyState = document.querySelector(".empty-state");
         if (emptyState) emptyState.style.display = "none";
 
-        // Add user message to display
+        // Add user message
         const messagesContainer = document.getElementById("chatMessages");
         const userMsgEl = createMessageElement("user", message);
         messagesContainer.appendChild(userMsgEl);
@@ -946,7 +1305,259 @@
         } catch (error) {
           console.error("Error saving message:", error);
         }
+
+        // Get AI response
+        try {
+          const response = await fetch("/api/chat", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              user_message: message,
+              model: selectedModel,
+              include_file: false,
+            }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            const aiResponse =
+              data.response || "I could not generate a response.";
+
+            // Add AI response
+            const aiMsgEl = createMessageElement("assistant", aiResponse);
+            messagesContainer.appendChild(aiMsgEl);
+
+            // Save AI response
+            await fetch(`/api/chats/${currentChatId}/messages`, {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${sessionToken}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ role: "assistant", content: aiResponse }),
+            });
+
+            messagesContainer.parentElement.scrollTop =
+              messagesContainer.parentElement.scrollHeight;
+
+            if (voiceReplyEnabled) {
+              speakAssistantReply(aiResponse);
+            }
+          }
+        } catch (error) {
+          console.error("Error getting AI response:", error);
+        }
       }
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // FEATURE IMPLEMENTATIONS
+      // ═══════════════════════════════════════════════════════════════════════
+
+      async function performSearch() {
+        const query = document.getElementById("searchQuery").value;
+        if (!query) return;
+
+        const resultsDiv = document.getElementById("searchResults");
+        resultsDiv.innerHTML = "<p>Searching...</p>";
+
+        try {
+          const response = await fetch("/api/search", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            resultsDiv.innerHTML =
+              "<h3>Results:</h3>" +
+              (data.results
+                ?.map(
+                  (r) =>
+                    `<div class="news-item"><strong>${r.title}</strong><p>${r.snippet}</p><a href="${r.link}" target="_blank">Read more</a></div>`,
+                )
+                .join("") || "<p>No results found</p>");
+          }
+        } catch (error) {
+          resultsDiv.innerHTML = "<p>Search error</p>";
+        }
+      }
+
+      function addTodo() {
+        const input = document.getElementById("todoInput");
+        const text = input.value.trim();
+        if (!text) return;
+
+        fetch("/api/todo", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ task: text }),
+        }).then(() => {
+          input.value = "";
+          loadTodos();
+        });
+      }
+
+      function loadTodos() {
+        fetch("/api/todo")
+          .then((r) => r.json())
+          .then((data) => {
+            const todoList = document.getElementById("todoList");
+            todoList.innerHTML = "";
+
+            (data.todos || []).forEach((todo, idx) => {
+              const item = document.createElement("div");
+              item.className = "todo-item";
+              item.innerHTML = `<span>${escapeHtml(todo)}</span><button onclick="deleteTodo(${idx})">✕</button>`;
+              todoList.appendChild(item);
+            });
+          });
+      }
+
+      function deleteTodo(index) {
+        fetch("/api/todo", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ index }),
+        }).then(() => loadTodos());
+      }
+
+      function saveNote() {
+        const title = document.getElementById("noteTitle").value;
+        const content = document.getElementById("noteContent").value;
+
+        if (!title || !content) return;
+
+        fetch("/api/notes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, content }),
+        }).then(() => {
+          document.getElementById("noteTitle").value = "";
+          document.getElementById("noteContent").value = "";
+          loadNotes();
+        });
+      }
+
+      function loadNotes() {
+        fetch("/api/notes")
+          .then((r) => r.json())
+          .then((data) => {
+            const notesList = document.getElementById("notesList");
+            notesList.innerHTML = "";
+
+            (data.notes || []).forEach((note) => {
+              const item = document.createElement("div");
+              item.className = "note-item";
+              item.innerHTML = `<strong>${escapeHtml(note.title)}</strong><p>${escapeHtml(note.content.substring(0, 100))}...</p>`;
+              notesList.appendChild(item);
+            });
+          });
+      }
+
+      async function lookupMedical() {
+        const query = document.getElementById("medicalQuery").value;
+        if (!query) return;
+
+        const resultsDiv = document.getElementById("medicalResults");
+        resultsDiv.innerHTML = "<p>Looking up...</p>";
+
+        try {
+          const response = await fetch("/api/medical", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ condition: query }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            resultsDiv.innerHTML =
+              "<h3>Information:</h3><p>" +
+              escapeHtml(data.analysis || "No information available") +
+              "</p>";
+          }
+        } catch (error) {
+          resultsDiv.innerHTML = "<p>Error fetching medical information</p>";
+        }
+      }
+
+      async function generateDeca() {
+        const contentDiv = document.getElementById("decaContent");
+        contentDiv.innerHTML = "<p>Generating question...</p>";
+
+        try {
+          const response = await fetch("/api/deca", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "generate" }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            contentDiv.innerHTML =
+              `<div class="todo-item"><strong>Question:</strong><p>${escapeHtml(data.question || "No question")}</p></div>` +
+              `<textarea id="decaAnswer" placeholder="Your answer..." style="width: 100%; height: 200px; padding: var(--sp-3); border: var(--border-w) solid var(--border);"></textarea>` +
+              `<button class="btn" onclick="submitDecaAnswer()">Submit Answer</button>`;
+          }
+        } catch (error) {
+          contentDiv.innerHTML = "<p>Error generating DECA question</p>";
+        }
+      }
+
+      function submitDecaAnswer() {
+        const answer = document.getElementById("decaAnswer").value;
+        alert("Answer submitted: " + answer);
+      }
+
+      async function loadDecaSample() {
+        const contentDiv = document.getElementById("decaContent");
+        contentDiv.innerHTML = "<p>Loading sample...</p>";
+
+        try {
+          const response = await fetch("/api/deca", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "sample" }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            contentDiv.innerHTML =
+              '<div class="todo-item"><p>' +
+              escapeHtml(data.sample || "No sample available") +
+              "</p></div>";
+          }
+        } catch (error) {
+          contentDiv.innerHTML = "<p>Error loading sample</p>";
+        }
+      }
+
+      async function loadNews() {
+        const newsList = document.getElementById("newsList");
+        newsList.innerHTML = "<p>Loading news...</p>";
+
+        try {
+          const response = await fetch("/api/news");
+
+          if (response.ok) {
+            const data = await response.json();
+            newsList.innerHTML = (data.news || [])
+              .map(
+                (item) =>
+                  `<div class="news-item"><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.snippet || item.description)}</p></div>`,
+              )
+              .join("");
+          }
+        } catch (error) {
+          newsList.innerHTML = "<p>Error loading news</p>";
+        }
+      }
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // UTILITIES
+      // ═══════════════════════════════════════════════════════════════════════
 
       function escapeHtml(text) {
         const map = {
@@ -959,15 +1570,39 @@
         return text.replace(/[&<>"']/g, (m) => map[m]);
       }
 
-      // Textarea auto-expand (up to limit)
+      // Textarea auto-expand
       document.addEventListener("DOMContentLoaded", () => {
         const textarea = document.getElementById("chatInput");
-        textarea.addEventListener("input", () => {
+        textarea?.addEventListener("input", () => {
           textarea.style.height = "auto";
-          const newHeight = Math.min(textarea.scrollHeight, 120);
+          const newHeight = Math.min(textarea.scrollHeight, 80);
           textarea.style.height = newHeight + "px";
         });
       });
+
+      function handleFileSelect(event) {
+        console.log("File selected:", event.target.files[0]);
+      }
+
+      function removeAttachedFile() {}
+
+      function toggleVoiceInput() {
+        alert("Voice input not yet implemented");
+      }
+
+      function toggleVoiceOutput() {
+        voiceReplyEnabled = !voiceReplyEnabled;
+        document.getElementById("voiceReplyToggle").classList.toggle("active");
+      }
+
+      function speakAssistantReply(text) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        window.speechSynthesis.speak(utterance);
+      }
+
+      // Load initial data
+      loadTodos();
+      loadNotes();
     </script>
   </body>
 </html>
