@@ -1,11 +1,12 @@
 # Derei Assistant
 
-A multifunction AI assistant project with two interfaces:
+A multifunction AI assistant project with three interfaces:
 
 - **Web app** built with Flask + Groq (`app.py`)
 - **Terminal app** built with Rich + Groq (`chatbot.py`)
+- **Discord bot** built with discord.py + Groq (`discord_bot.py`)
 
-This project combines chat, model selection, notes, to-do workflow, DECA prep, medical term breakdowns, web search + URL summarization, and global RSS news summarization.
+This project combines chat, model selection, notes, to-do workflow, DECA prep, medical term breakdowns, web search + URL summarization, global RSS news summarization, and Discord integration.
 
 ---
 
@@ -18,6 +19,7 @@ This project combines chat, model selection, notes, to-do workflow, DECA prep, m
 - [Setup](#setup)
 - [Environment Variables](#environment-variables)
 - [Run the Project](#run-the-project)
+- [Discord Bot](#discord-bot)
 - [API Reference (Web)](#api-reference-web)
 - [Terminal Commands](#terminal-commands)
 - [Configuration Notes](#configuration-notes)
@@ -41,6 +43,7 @@ It supports:
 - Structured study modes (DECA, medical terminology, essay feedback, math helper)
 - Productivity modules (to-do + pomodoro timer + notes)
 - Lightweight web intelligence (search + URL summarize + global news summaries)
+- **Discord integration** — Chat with Derei directly in Discord servers
 
 ---
 
@@ -88,11 +91,20 @@ It supports:
 - **Global News Feed**: Multi-source RSS aggregation with AI summaries
 - **Continent Organization**: News sorted by geographic region
 
+### 7) Discord Integration
+
+- **Discord Bot**: Chat with Derei directly in Discord servers
+- **Slash Commands**: `/ask <question>` for instant AI responses
+- **Multi-turn Conversations**: Derei remembers context per Discord user
+- **Study in Discord**: No context-switching needed; stay with your study group
+- **Command History**: `/clear` to reset conversation history
+
 ---
 
 ## Tech Stack
 
 - **Backend**: Flask (Python)
+- **Discord**: discord.py (Python)
 - **AI/LLM**: Groq API (llama-3.3-70b-versatile, llama-4-scout-17b, etc.)
 - **Frontend**: Vanilla JS + CSS
 - **Terminal UI**: Rich library (Python)
@@ -109,8 +121,9 @@ gigglegiggle/
 ├── chatbot_hosting_files/
 │   ├── app.py                    # Flask web app
 │   ├── chatbot.py                # Terminal CLI app
+│   ├── discord_bot.py            # Discord bot (NEW)
 │   ├── derei_constitution.md     # System prompt override
-│   ├── requirements.txt           # Python dependencies
+│   ├── requirements.txt           # Python dependencies (includes discord.py)
 │   ├── runtime.txt                # Python version (for Railway)
 │   ├── Procfile                   # Deployment config
 │   ├── .env                       # Local env vars (not committed)
@@ -193,6 +206,61 @@ python chatbot.py
 ```
 
 Fully interactive terminal UI with rich formatting.
+
+### Discord Bot
+
+```bash
+cd chatbot_hosting_files
+python discord_bot.py
+```
+
+The bot will connect to Discord and listen for commands. **Before running, follow the [Discord Bot Setup Guide](DISCORD_BOT_SETUP.md) to:**
+
+1. Create a Discord application
+2. Get your bot token
+3. Set `DISCORD_TOKEN` in `.env` or Railway Variables
+
+Once running, use `/ask <question>` in Discord to chat with Derei!
+
+---
+
+## Discord Bot
+
+The Derei Discord bot allows users to chat with AI directly in Discord without leaving their server. Perfect for study groups!
+
+### Quick Start
+
+1. **Create Discord app** (see [Discord Bot Setup Guide](DISCORD_BOT_SETUP.md))
+2. **Set DISCORD_TOKEN** in `.env` or Railway Variables
+3. **Run bot**: `python discord_bot.py`
+4. **In Discord**: Type `/ask <question>` to chat with Derei
+
+### Commands
+
+| Command  | Usage                          | Description                          |
+| -------- | ------------------------------ | ------------------------------------ |
+| `/ask`   | `/ask What is photosynthesis?` | Ask Derei any question               |
+| `/clear` | `/clear`                       | Reset your conversation history      |
+| `/derei` | `/derei`                       | Show bot info and available commands |
+
+### Features
+
+- ✅ Multi-turn conversations (remembers context per user)
+- ✅ Beautiful embedded responses
+- ✅ Automatic response trimming (fits Discord's 2000-char limit)
+- ✅ Graceful error handling
+- ✅ No persistent storage (privacy-focused)
+
+### Deploy to Railway (Optional)
+
+For 24/7 bot uptime, create a new Railway service:
+
+1. In Railway, create a new service for this repo
+2. Set start command: `python chatbot_hosting_files/discord_bot.py`
+3. Add `DISCORD_TOKEN` variable
+4. Deploy
+
+See [Discord Bot Setup Guide](DISCORD_BOT_SETUP.md) for detailed instructions.
 
 ---
 
