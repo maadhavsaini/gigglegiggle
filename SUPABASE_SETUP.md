@@ -36,17 +36,117 @@ Go to Railway Dashboard → Your Project:
 3. Keep existing variables (GROQ_API_KEY, PORT, etc.)
 4. **Redeploy** after adding variables
 
-### 3. Run Local Installation
+---
 
-```bash
-# Install new dependency
-pip install supabase
+## 📋 SQL TABLES YOU'RE CREATING
 
-# Create the database tables (run the SQL provided in setup guide)
-# Go to Supabase Dashboard → SQL Editor → New Query → Paste SQL → Execute
+Here's what each table does:
+
+| Table      | Purpose               | Fields                                             |
+| ---------- | --------------------- | -------------------------------------------------- |
+| `users`    | Stores user accounts  | id, username, email, password_hash, created_at     |
+| `sessions` | Keeps users logged in | id, user_id, session_token, created_at, expires_at |
+| `chats`    | Conversation threads  | id, user_id, title, created_at, updated_at         |
+| `messages` | Chat messages         | id, chat_id, role, content, created_at             |
+
+**How they connect:**
+
+```
+User (id)
+  ↓ (one user has many sessions)
+Session (user_id points to users.id)
+
+User (id)
+  ↓ (one user has many chats)
+Chat (user_id points to users.id)
+  ↓ (one chat has many messages)
+Message (chat_id points to chats.id)
 ```
 
-### 4. Update app.py
+---
+
+### 3. Create Database Tables (IMPORTANT!)
+
+**Steps:**
+
+1. Go to [app.supabase.com](https://app.supabase.com) → Click your project
+2. Click **SQL Editor** (left sidebar)
+3. Click **New Query** (top-right)
+4. **Copy-paste the entire SQL block below** into the editor
+5. Click **Run** button
+
+**COPY-PASTE THIS SQL:**
+
+```sql
+-- ============================================
+-- DEREI ASSISTANT - SUPABASE SCHEMA
+-- ============================================
+
+-- Users table
+CREATE TABLE users (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  username TEXT UNIQUE NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT now()
+);
+
+-- Sessions table
+CREATE TABLE sessions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+  session_token TEXT UNIQUE NOT NULL,
+  created_at TIMESTAMP DEFAULT now(),
+  expires_at TIMESTAMP NOT NULL
+);
+
+-- Chats table
+CREATE TABLE chats (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+  title TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT now(),
+  updated_at TIMESTAMP DEFAULT now()
+);
+
+-- Messages table
+CREATE TABLE messages (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  chat_id UUID REFERENCES chats(id) ON DELETE CASCADE NOT NULL,
+  role TEXT NOT NULL,
+  content TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT now()
+);
+
+-- Create indexes for faster queries
+CREATE INDEX idx_users_username ON users(username);
+CREATE INDEX idx_sessions_token ON sessions(session_token);
+CREATE INDEX idx_sessions_expires ON sessions(expires_at);
+CREATE INDEX idx_chats_user ON chats(user_id);
+CREATE INDEX idx_messages_chat ON messages(chat_id);
+
+-- Enable Row Level Security (temporary: allow public)
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE chats ENABLE ROW LEVEL SECURITY;
+ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+
+-- Create policies for public access (for MVP)
+CREATE POLICY "public_users" ON users FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "public_sessions" ON sessions FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "public_chats" ON chats FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "public_messages" ON messages FOR ALL USING (true) WITH CHECK (true);
+```
+
+**Expected result:** ✅ Success message appears
+
+### 4. Install Supabase Package
+
+```bash
+pip install supabase
+```
+
+### 5. Update app.py
 
 Replace the auth imports:
 
@@ -66,7 +166,7 @@ user_manager = SupabaseAuthManager()
 chat_manager = SupabaseChatManager()
 ```
 
-### 5. Test Locally
+### 6. Test Locally
 
 ```bash
 python app.py
