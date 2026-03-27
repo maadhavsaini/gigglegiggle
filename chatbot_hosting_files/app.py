@@ -6,7 +6,7 @@ import json
 import re
 from datetime import datetime
 import PyPDF2
-from auth import UserManager, ChatManager
+from auth_supabase import SupabaseAuthManager, SupabaseChatManager
 
 app = Flask(__name__)
 
@@ -20,8 +20,8 @@ client = Groq(api_key=API_KEY) if API_KEY else None
 BASE_DIR = os.getenv("DATA_DIR", os.path.join(APP_DIR, "data"))
 
 # Initialize authentication managers
-user_manager = UserManager(BASE_DIR)
-chat_manager = ChatManager(BASE_DIR)
+user_manager = SupabaseAuthManager()
+chat_manager = SupabaseChatManager()
 CHAT_DIR = os.path.join(BASE_DIR, "chats")
 TODO_FILE = os.path.join(BASE_DIR, "todos.txt")
 DONE_FILE = os.path.join(BASE_DIR, "done.txt")
@@ -1205,12 +1205,12 @@ def register():
     if len(password) < 6:
         return jsonify({"error": "Password must be at least 6 characters"}), 400
     
-    success, message = user_manager.register_user(username, email, password)
+    result = user_manager.register_user(username, email, password)
     
-    if not success:
-        return jsonify({"error": message}), 400
+    if not result['success']:
+        return jsonify({"error": result['error']}), 400
     
-    return jsonify({"message": message}), 201
+    return jsonify({"message": "User registered successfully"}), 201
 
 
 @app.route('/api/auth/login', methods=['POST'])
@@ -1223,15 +1223,15 @@ def login():
     if not username or not password:
         return jsonify({"error": "Missing username or password"}), 400
     
-    session_token, message = user_manager.login_user(username, password)
+    result = user_manager.login_user(username, password)
     
-    if not session_token:
-        return jsonify({"error": message}), 401
+    if not result['success']:
+        return jsonify({"error": result['error']}), 401
     
     return jsonify({
-        "session_token": session_token,
-        "username": username,
-        "message": message
+        "session_token": result['session_token'],
+        "username": result['user']['username'],
+        "message": "Login successful"
     }), 200
 
 
@@ -1253,15 +1253,14 @@ def verify_auth():
     if not session_token:
         return jsonify({"authenticated": False}), 401
     
-    username = user_manager.verify_session(session_token)
+    result = user_manager.verify_session(session_token)
     
-    if not username:
+    if not result['valid']:
         return jsonify({"authenticated": False}), 401
     
-    user_info = user_manager.get_user_info(username)
     return jsonify({
         "authenticated": True,
-        "user": user_info
+        "user": result['user']
     }), 200
 
 
@@ -1273,59 +1272,77 @@ def verify_auth():
 def list_chats():
     """List all chats for authenticated user"""
     session_token = request.headers.get('Authorization', '').replace('Bearer ', '')
-    username = user_manager.verify_session(session_token)
     
-    if not username:
+    result = user_manager.verify_session(session_token)
+    if not result['valid']:
         return jsonify({"error": "Unauthorized"}), 401
     
-    chats = chat_manager.list_user_chats(username)
-    return jsonify({"chats": chats}), 200
+    user_id = result['user']['id']
+    chats_result = chat_manager.get_user_chats(user_id)
+    
+    if not chats_result['success']:
+        return jsonify({"error": chats_result.get('error', 'Failed to fetch chats')}), 500
+    
+    return jsonify({"chats": chats_result['chats']}), 200
 
 
 @app.route('/api/chats', methods=['POST'])
 def create_chat():
     """Create a new chat"""
     session_token = request.headers.get('Authorization', '').replace('Bearer ', '')
-    username = user_manager.verify_session(session_token)
     
-    if not username:
+    result = user_manager.verify_session(session_token)
+    if not result['valid']:
         return jsonify({"error": "Unauthorized"}), 401
     
+    user_id = result['user']['id']
     data = request.get_json() or {}
     title = data.get('title', 'New Chat')
     
-    chat_id = chat_manager.create_chat(username, title)
-    return jsonify({"chat_id": chat_id, "title": title}), 201
+    chat_result = chat_manager.create_chat(user_id, title)
+    
+    if not chat_result['success']:
+        return jsonify({"error": chat_result.get('error', 'Failed to create chat')}), 500
+    
+    return jsonify({
+        "chat_id": chat_result['chat_id'],
+        "title": chat_result['title'],
+        "created_at": chat_result['created_at']
+    }), 201
 
 
 @app.route('/api/chats/<chat_id>', methods=['GET'])
 def get_chat(chat_id):
     """Get a specific chat"""
     session_token = request.headers.get('Authorization', '').replace('Bearer ', '')
-    username = user_manager.verify_session(session_token)
     
-    if not username:
+    result = user_manager.verify_session(session_token)
+    if not result['valid']:
         return jsonify({"error": "Unauthorized"}), 401
     
-    chat = chat_manager.get_chat(username, chat_id)
+    user_id = result['user']['id']
+    chat_result = chat_manager.get_chat(chat_id, user_id)
     
-    if not chat:
-        return jsonify({"error": "Chat not found"}), 404
+    if not chat_result['success']:
+        return jsonify({"error": chat_result.get('error', 'Chat not found')}), 404
     
-    return jsonify(chat), 200
+    return jsonify(chat_result), 200
 
 
 @app.route('/api/chats/<chat_id>', methods=['DELETE'])
 def delete_chat(chat_id):
     """Delete a chat"""
     session_token = request.headers.get('Authorization', '').replace('Bearer ', '')
-    username = user_manager.verify_session(session_token)
     
-    if not username:
+    result = user_manager.verify_session(session_token)
+    if not result['valid']:
         return jsonify({"error": "Unauthorized"}), 401
     
-    if not chat_manager.delete_chat(username, chat_id):
-        return jsonify({"error": "Chat not found"}), 404
+    user_id = result['user']['id']
+    delete_result = chat_manager.delete_chat(chat_id, user_id)
+    
+    if not delete_result['success']:
+        return jsonify({"error": delete_result.get('error', 'Chat not found')}), 404
     
     return jsonify({"message": "Chat deleted"}), 200
 
@@ -1334,11 +1351,12 @@ def delete_chat(chat_id):
 def add_chat_message(chat_id):
     """Add a message to a chat"""
     session_token = request.headers.get('Authorization', '').replace('Bearer ', '')
-    username = user_manager.verify_session(session_token)
     
-    if not username:
+    result = user_manager.verify_session(session_token)
+    if not result['valid']:
         return jsonify({"error": "Unauthorized"}), 401
     
+    user_id = result['user']['id']
     data = request.get_json() or {}
     role = data.get('role', 'user')
     content = data.get('content', '')
@@ -1346,10 +1364,15 @@ def add_chat_message(chat_id):
     if not content:
         return jsonify({"error": "Message content required"}), 400
     
-    if not chat_manager.add_message(username, chat_id, role, content):
-        return jsonify({"error": "Failed to add message"}), 500
+    msg_result = chat_manager.add_message(chat_id, user_id, role, content)
     
-    return jsonify({"message": "Message added"}), 201
+    if not msg_result['success']:
+        return jsonify({"error": msg_result.get('error', 'Failed to add message')}), 500
+    
+    return jsonify({
+        "message_id": msg_result['message_id'],
+        "timestamp": msg_result['timestamp']
+    }), 201
 
 
 if __name__ == '__main__':
