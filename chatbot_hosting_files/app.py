@@ -553,7 +553,7 @@ def build_vision_user_content(message, attachment):
 
 @app.route('/')
 def index():
-    return render_template('index_new.html')
+    return render_template('index.html')
 
 @app.route('/static/<path:filename>')
 def static_files(filename):

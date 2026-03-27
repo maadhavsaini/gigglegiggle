@@ -5,7 +5,7 @@ A multifunction AI assistant with web, terminal, and Discord interfaces.
 ## Features
 
 - **Web App** — Chat interface with model selection, file upload, and auth
-- **Terminal App** — Rich CLI with streaming responses  
+- **Terminal App** — Rich CLI with streaming responses
 - **Discord Bot** — Native Discord integration with `/ask` commands
 - **Authentication** — User login/signup with Supabase PostgreSQL
 - **AI** — Groq API for fast LLM inference
@@ -116,23 +116,22 @@ chatbot_hosting_files/
 
 ## Discord Bot Commands
 
-| Command  | Usage                          | Description              |
-|----------|--------------------------------|--------------------------|
-| `/ask`   | `/ask What is photosynthesis?` | Ask Derei a question     |
-| `/clear` | `/clear`                       | Clear your chat history  |
+| Command  | Usage                          | Description             |
+| -------- | ------------------------------ | ----------------------- |
+| `/ask`   | `/ask What is photosynthesis?` | Ask Derei a question    |
+| `/clear` | `/clear`                       | Clear your chat history |
 
 ## Environment Variables
 
-| Variable         | Required | Description                           |
-|------------------|----------|---------------------------------------|
-| `SUPABASE_URL`   | Yes      | Your Supabase project URL             |
-| `SUPABASE_KEY`   | Yes      | Your Supabase anon key                |
-| `GROQ_API_KEY`   | Yes      | Your Groq API key                     |
-| `DISCORD_TOKEN`  | No       | Discord bot token (for Discord bot)   |
-| `FLASK_DEBUG`    | No       | Set to `1` for debug mode (local only)|
-| `PORT`           | No       | HTTP port (default: 5000)             |
+| Variable        | Required | Description                            |
+| --------------- | -------- | -------------------------------------- |
+| `SUPABASE_URL`  | Yes      | Your Supabase project URL              |
+| `SUPABASE_KEY`  | Yes      | Your Supabase anon key                 |
+| `GROQ_API_KEY`  | Yes      | Your Groq API key                      |
+| `DISCORD_TOKEN` | No       | Discord bot token (for Discord bot)    |
+| `FLASK_DEBUG`   | No       | Set to `1` for debug mode (local only) |
+| `PORT`          | No       | HTTP port (default: 5000)              |
 
 ## License
 
 See [LICENSE](LICENSE) for details.
-
