@@ -574,13 +574,80 @@ def groq_models():
 # CHAT
 # ─────────────────────────────────────────────────────────────────────────────
 
+def extract_pdf_from_attachment(attachment):
+    """Extract text from PDF in attachment.content (base64 encoded PDF)."""
+    try:
+        if not isinstance(attachment, dict):
+            return None, "Invalid attachment format"
+        
+        content = attachment.get('content', '')
+        if not content:
+            return None, "No content in attachment"
+        
+        # If it starts with data:application/pdf;base64,, strip that prefix
+        if content.startswith('data:'):
+            # data URL format
+            parts = content.split(',', 1)
+            if len(parts) == 2:
+                content = parts[1]
+        
+        # Decode base64
+        try:
+            import base64
+            pdf_bytes = base64.b64decode(content)
+        except Exception as e:
+            return None, f"Failed to decode PDF: {str(e)}"
+        
+        # Extract text using PyPDF2
+        try:
+            import io
+            pdf_file = io.BytesIO(pdf_bytes)
+            reader = PyPDF2.PdfReader(pdf_file)
+            
+            text = ""
+            page_count = len(reader.pages)
+            if page_count > MAX_PDF_PAGES:
+                text += f"[PDF: Extracted first {MAX_PDF_PAGES} of {page_count} pages]\n\n"
+                pages_to_read = MAX_PDF_PAGES
+            else:
+                pages_to_read = page_count
+            
+            for i in range(pages_to_read):
+                try:
+                    page_text = reader.pages[i].extract_text()
+                    if page_text:
+                        text += page_text + "\n"
+                except Exception as page_error:
+                    text += f"[Error extracting page {i+1}]\n"
+            
+            if not text.strip():
+                return None, "PDF could not be read (no extractable text)"
+            
+            return text.strip(), None
+        except Exception as e:
+            return None, f"Failed to extract PDF text: {str(e)}"
+    except Exception as e:
+        return None, f"Unexpected error processing PDF: {str(e)}"
+
+
 @app.route('/api/chat', methods=['POST'])
 def chat():
     data = request.get_json() or {}
-    message = data.get('message', '')
+    user_message = data.get('user_message', '')
+    message = data.get('message', '') or user_message  # Support both field names
     history = data.get('history', [])
     attachment = data.get('attachment')
     requested_model = data.get('model', '')
+
+    # Handle PDF attachments by extracting text
+    if attachment and isinstance(attachment, dict):
+        if attachment.get('type', '').lower() == 'application/pdf':
+            extracted_text, error = extract_pdf_from_attachment(attachment)
+            if error:
+                return jsonify({"error": f"PDF processing error: {error}"}), 400
+            if extracted_text:
+                attachment['content'] = extracted_text
+                attachment['originalChars'] = len(extracted_text)
 
     is_image_attachment = isinstance(attachment, dict) and attachment.get('kind') == 'image'
     full_message, attachment_meta = build_user_message(message, attachment)
@@ -615,7 +682,8 @@ def chat():
         )
         reply = response.choices[0].message.content
         response_payload = {
-            "reply": reply,
+            "response": reply,
+            "reply": reply,  # Keep both for compatibility
             "modelUsed": {
                 "id": model_name,
                 "name": _friendly_model_name(model_name),

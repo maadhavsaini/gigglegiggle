@@ -1276,7 +1276,8 @@
         const input = document.getElementById("chatInput");
         const message = input.value.trim();
 
-        if (!message || !currentChatId) return;
+        if (!message && !attachedFile) return;
+        if (!currentChatId) return;
 
         input.value = "";
         input.style.height = "auto";
@@ -1287,7 +1288,8 @@
 
         // Add user message
         const messagesContainer = document.getElementById("chatMessages");
-        const userMsgEl = createMessageElement("user", message);
+        const displayMessage = message || `[Attached: ${attachedFile.name}]`;
+        const userMsgEl = createMessageElement("user", displayMessage);
         messagesContainer.appendChild(userMsgEl);
         messagesContainer.parentElement.scrollTop =
           messagesContainer.parentElement.scrollHeight;
@@ -1300,24 +1302,30 @@
               Authorization: `Bearer ${sessionToken}`,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ role: "user", content: message }),
+            body: JSON.stringify({ role: "user", content: displayMessage }),
           });
         } catch (error) {
           console.error("Error saving message:", error);
         }
 
-        // Get AI response
+        // Get AI response with file if attached
         try {
+          const requestBody = {
+            user_message: message,
+            model: selectedModel,
+            include_file: !!attachedFile,
+          };
+
+          if (attachedFile) {
+            requestBody.attachment = attachedFile;
+          }
+
           const response = await fetch("/api/chat", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-              user_message: message,
-              model: selectedModel,
-              include_file: false,
-            }),
+            body: JSON.stringify(requestBody),
           });
 
           if (response.ok) {
@@ -1342,12 +1350,27 @@
             messagesContainer.parentElement.scrollTop =
               messagesContainer.parentElement.scrollHeight;
 
+            // Clear attached file after sending
+            removeAttachedFile();
+
             if (voiceReplyEnabled) {
               speakAssistantReply(aiResponse);
             }
+          } else {
+            const errorData = await response.json();
+            const aiMsgEl = createMessageElement(
+              "assistant",
+              `Error: ${errorData.error || "Unknown error"}`,
+            );
+            messagesContainer.appendChild(aiMsgEl);
           }
         } catch (error) {
           console.error("Error getting AI response:", error);
+          const aiMsgEl = createMessageElement(
+            "assistant",
+            "Connection error. Please try again.",
+          );
+          messagesContainer.appendChild(aiMsgEl);
         }
       }
 
@@ -1580,11 +1603,92 @@
         });
       });
 
+      let attachedFile = null;
+
       function handleFileSelect(event) {
-        console.log("File selected:", event.target.files[0]);
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const maxSize = 2 * 1024 * 1024; // 2MB
+        if (file.size > maxSize) {
+          alert(
+            `File too large. Max size: 2MB. Your file: ${(file.size / 1024 / 1024).toFixed(2)}MB`,
+          );
+          return;
+        }
+
+        const isPDF =
+          file.type === "application/pdf" ||
+          file.name.toLowerCase().endsWith(".pdf");
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+          let content = e.target.result;
+
+          // For PDFs, convert ArrayBuffer to base64
+          if (isPDF && content instanceof ArrayBuffer) {
+            content = btoa(String.fromCharCode(...new Uint8Array(content)));
+          }
+
+          attachedFile = {
+            name: file.name,
+            content: content,
+            originalChars: file.size,
+            truncated: false,
+            type: file.type,
+          };
+          updateAttachmentDisplay();
+        };
+        reader.onerror = () => {
+          alert("Error reading file");
+          attachedFile = null;
+        };
+
+        // Read as ArrayBuffer for PDFs, text for others
+        if (isPDF) {
+          reader.readAsArrayBuffer(file);
+        } else {
+          reader.readAsText(file, "utf-8");
+        }
       }
 
-      function removeAttachedFile() {}
+      function updateAttachmentDisplay() {
+        const wrapper = document.querySelector(".input-wrapper");
+        let display = wrapper.querySelector(".file-display");
+
+        if (!display) {
+          display = document.createElement("div");
+          display.className = "file-display";
+          display.style.cssText = `
+            font-size: var(--text-xs);
+            color: var(--text-dim);
+            padding: var(--sp-2);
+            background: var(--surface-dim);
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          `;
+          wrapper.appendChild(display);
+        }
+
+        if (attachedFile) {
+          display.innerHTML = `
+            <span>📎 ${escapeHtml(attachedFile.name)} (${(attachedFile.originalChars / 1024).toFixed(1)}KB)</span>
+            <button type="button" onclick="removeAttachedFile()" style="border: none; background: none; color: var(--error); cursor: pointer; font-size: var(--text-xs);">✕</button>
+          `;
+          display.style.display = "flex";
+        } else {
+          display.style.display = "none";
+        }
+      }
+
+      function removeAttachedFile() {
+        attachedFile = null;
+        document.getElementById("fileInput").value = "";
+        updateAttachmentDisplay();
+      }
 
       function toggleVoiceInput() {
         alert("Voice input not yet implemented");

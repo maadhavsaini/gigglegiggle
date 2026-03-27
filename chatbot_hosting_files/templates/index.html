@@ -472,6 +472,19 @@
             </div>
           </div>
           <div class="chat-input-area">
+            <div class="chat-search-row">
+              <input
+                type="text"
+                id="chatSearchInput"
+                class="chat-search-input"
+                placeholder="Search conversation…"
+                autocomplete="off"
+              />
+              <span id="chatSearchCount" class="chat-search-count"></span>
+              <button id="chatSearchClear" class="chat-search-clear" title="Clear search" style="display: none;">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
             <div class="chat-model-row">
               <span class="chat-model-label">AI Model</span>
               <select id="chatModelSelect" class="chat-model-select"></select>
@@ -1393,7 +1406,57 @@
         container.scrollTop = container.scrollHeight;
       }
 
-      function handleFileSelect(e) {
+      function performChatSearch(query) {
+        const container = document.getElementById("chatMessages");
+        const searchCount = document.getElementById("chatSearchCount");
+        const messages = container.querySelectorAll(".message");
+        
+        if (!query.trim()) {
+          // Clear search - show all messages
+          messages.forEach(msg => {
+            msg.classList.remove("search-hidden", "search-highlight");
+            // Remove any highlighting from content
+            const content = msg.querySelector(".message-content");
+            if (content) {
+              content.innerHTML = content.innerHTML.replace(/<mark>/g, "").replace(/<\/mark>/g, "");
+            }
+          });
+          searchCount.textContent = "";
+          return;
+        }
+
+        const lowerQuery = query.toLowerCase();
+        let matchCount = 0;
+
+        messages.forEach((msg) => {
+          const content = msg.querySelector(".message-content");
+          const text = content.textContent;
+          
+          if (text.toLowerCase().includes(lowerQuery)) {
+            msg.classList.remove("search-hidden");
+            msg.classList.add("search-highlight");
+            
+            // Highlight matching text
+            const highlighted = text.replace(
+              new RegExp(`(${lowerQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi"),
+              "<mark>$1</mark>"
+            );
+            content.innerHTML = highlighted;
+            matchCount++;
+          } else {
+            msg.classList.add("search-hidden");
+            msg.classList.remove("search-highlight");
+          }
+        });
+
+        searchCount.textContent = matchCount > 0 ? `${matchCount} result${matchCount !== 1 ? "s" : ""}` : "0 results";
+      }
+
+      function clearChatSearch() {
+        document.getElementById("chatSearchInput").value = "";
+        performChatSearch("");
+        document.getElementById("chatSearchClear").style.display = "none";
+      }
         const file = e.target.files[0];
         if (!file) return;
 
@@ -1604,6 +1667,19 @@
       });
 
       initTheme();
+      
+      // Chat search event listeners
+      const chatSearchInput = document.getElementById("chatSearchInput");
+      const chatSearchClear = document.getElementById("chatSearchClear");
+      
+      chatSearchInput.addEventListener("input", (e) => {
+        const query = e.target.value;
+        performChatSearch(query);
+        chatSearchClear.style.display = query.trim() ? "flex" : "none";
+      });
+      
+      chatSearchClear.addEventListener("click", clearChatSearch);
+      
       document
         .getElementById("chatModelSelect")
         .addEventListener("change", updateModelSummary);
