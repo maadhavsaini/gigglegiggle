@@ -1109,6 +1109,32 @@ def fetch_rss(source, max_items=2):
             desc = desc_match.group(1).strip() if desc_match else ''
             desc = re.sub(r'<[^>]+>', '', desc).strip()[:200]
 
+            # Image URL — try multiple common image locations in RSS
+            image_url = None
+            
+            # Try media:content first
+            media_content = re.search(r'<media:content[^>]*url=["\']([^"\']+)["\']', item)
+            if media_content:
+                image_url = media_content.group(1)
+            
+            # Try media:thumbnail
+            if not image_url:
+                media_thumb = re.search(r'<media:thumbnail[^>]*url=["\']([^"\']+)["\']', item)
+                if media_thumb:
+                    image_url = media_thumb.group(1)
+            
+            # Try enclosure (image type)
+            if not image_url:
+                enclosure = re.search(r'<enclosure[^>]*(?:type=["\']image[^"\']*["\'])?[^>]*url=["\']([^"\']+)["\']', item)
+                if enclosure:
+                    image_url = enclosure.group(1)
+            
+            # Try image tag
+            if not image_url:
+                img_tag = re.search(r'<image[^>]*url=["\']?([^"\'>\s]+)["\']?', item)
+                if img_tag:
+                    image_url = img_tag.group(1)
+
             if title and link and len(title) > 15:
                 articles.append({
                     "title": title,
@@ -1116,7 +1142,8 @@ def fetch_rss(source, max_items=2):
                     "source": source["name"],
                     "continent": source["continent"],
                     "snippet": desc,  # raw RSS blurb; AI summary added below
-                    "summary": ""
+                    "summary": "",
+                    "image": image_url
                 })
         return articles
     except Exception:

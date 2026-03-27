@@ -2394,7 +2394,13 @@
           const contClass = CONTINENT_CLASS[article.continent] || "na";
           const summary = article.summary || article.snippet || "";
 
+          let imageHtml = "";
+          if (article.image) {
+            imageHtml = `<div class="news-card-image"><img src="${escapeHtml(article.image)}" alt="Article image" onerror="this.parentElement.style.display='none'"></div>`;
+          }
+
           card.innerHTML = `
+            ${imageHtml}
             <div class="news-card-header">
                 <span class="news-card-source">${escapeHtml(article.source)}</span>
                 <span class="continent-badge ${contClass}">${escapeHtml(article.continent)}</span>
