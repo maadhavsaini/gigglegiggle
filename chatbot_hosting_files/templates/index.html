@@ -3,7 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Assistant</title>
+    <title>Derei Assistant</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
     <link rel="stylesheet" href="/static/design-system.css" />
     <style>
       /* ── Page-level overrides & supplementary styles ─────────────────── */
@@ -207,16 +211,18 @@
       }
 
       .chat-voice-btn {
-        padding: var(--sp-2) var(--sp-3);
+        padding: var(--sp-2) var(--sp-2);
         border: var(--border-w) solid var(--border);
         background: var(--surface);
         color: var(--text-secondary);
-        font-family: "DM Mono", monospace;
-        font-size: 10px;
-        text-transform: uppercase;
-        letter-spacing: var(--ls-wide);
         cursor: pointer;
         transition: all var(--trans-base);
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
       }
 
       .chat-voice-btn:hover {
@@ -379,6 +385,42 @@
           </div>
         </nav>
 
+        <!-- Theme toggle -->
+        <div style="padding: var(--sp-4); border-top: 1px solid var(--border)">
+          <button
+            id="themeToggle"
+            title="Toggle dark/light mode"
+            style="
+              width: 100%;
+              padding: var(--sp-2) var(--sp-3);
+              border: 1px solid var(--border);
+              background: var(--surface);
+              cursor: pointer;
+              font-size: var(--text-xs);
+              text-transform: uppercase;
+              letter-spacing: var(--ls-wide);
+              border-radius: 0;
+              transition: all var(--trans-base);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: var(--sp-2);
+              color: var(--text-dim);
+            "
+            onmouseover="
+              this.style.borderColor = 'var(--accent)';
+              this.style.color = 'var(--accent)';
+            "
+            onmouseout="
+              this.style.borderColor = 'var(--border)';
+              this.style.color = 'var(--text-dim)';
+            "
+          >
+            <i class="fas fa-moon"></i>
+            <span id="themeToggleText">Dark Mode</span>
+          </button>
+        </div>
+
         <!-- Sidebar graffiti illustration -->
         <div class="sidebar-illustration">
           <svg viewBox="0 0 160 100">
@@ -442,14 +484,14 @@
                   class="chat-voice-btn"
                   title="Speak to AI"
                 >
-                  Mic
+                  <i class="fas fa-microphone"></i>
                 </button>
                 <button
                   id="voiceReplyToggle"
                   class="chat-voice-btn active"
                   title="Toggle spoken AI replies"
                 >
-                  Voice On
+                  <i class="fas fa-volume-up"></i>
                 </button>
               </div>
             </div>
@@ -477,11 +519,7 @@
                 onclick="document.getElementById('fileInput').click()"
                 title="Attach file"
               >
-                <svg viewBox="0 0 16 16">
-                  <path
-                    d="M13 7l-5 5a3.5 3.5 0 01-5-5l5-5a2 2 0 013 3l-5 5a.5.5 0 01-1-1l4-4"
-                  />
-                </svg>
+                <i class="fas fa-paperclip"></i>
               </button>
               <input
                 type="text"
@@ -490,7 +528,9 @@
                 placeholder="Ask anything…"
                 autocomplete="off"
               />
-              <button class="chat-send" id="chatSend">Send</button>
+              <button class="chat-send" id="chatSend" title="Send message">
+                <i class="fas fa-arrow-right"></i>
+              </button>
             </div>
           </div>
         </div>
@@ -1529,6 +1569,41 @@
       document.getElementById("chatInput").addEventListener("keypress", (e) => {
         if (e.key === "Enter") sendChat();
       });
+
+      // Theme toggle
+      const themeToggle = document.getElementById("themeToggle");
+      const themeToggleText = document.getElementById("themeToggleText");
+      const themeToggleIcon = themeToggle.querySelector("i");
+
+      function initTheme() {
+        const isDark =
+          document.documentElement.getAttribute("data-theme") === "dark" ||
+          (!document.documentElement.hasAttribute("data-theme") &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches);
+        applyTheme(isDark);
+      }
+
+      function applyTheme(isDark) {
+        if (isDark) {
+          document.documentElement.setAttribute("data-theme", "dark");
+          themeToggleText.textContent = "Light Mode";
+          themeToggleIcon.className = "fas fa-sun";
+          localStorage.setItem("theme", "dark");
+        } else {
+          document.documentElement.removeAttribute("data-theme");
+          themeToggleText.textContent = "Dark Mode";
+          themeToggleIcon.className = "fas fa-moon";
+          localStorage.setItem("theme", "light");
+        }
+      }
+
+      themeToggle.addEventListener("click", () => {
+        const isDark =
+          document.documentElement.getAttribute("data-theme") === "dark";
+        applyTheme(!isDark);
+      });
+
+      initTheme();
       document
         .getElementById("chatModelSelect")
         .addEventListener("change", updateModelSummary);
