@@ -383,6 +383,12 @@
             </svg>
             <span>News</span>
           </div>
+          
+          <!-- Search chats -->
+          <div class="nav-item" id="navSearchToggle" title="Search conversation">
+            <i class="fas fa-search"></i>
+            <span>Search</span>
+          </div>
         </nav>
 
         <!-- Theme toggle -->
@@ -472,7 +478,7 @@
             </div>
           </div>
           <div class="chat-input-area">
-            <div class="chat-search-row">
+            <div class="chat-search-row" id="chatSearchRow" style="display: none;">
               <input
                 type="text"
                 id="chatSearchInput"
@@ -1679,6 +1685,21 @@
       });
       
       chatSearchClear.addEventListener("click", clearChatSearch);
+      
+      // Search toggle button in sidebar
+      const navSearchToggle = document.getElementById("navSearchToggle");
+      const chatSearchRow = document.getElementById("chatSearchRow");
+      
+      navSearchToggle.addEventListener("click", () => {
+        const isHidden = chatSearchRow.style.display === "none";
+        chatSearchRow.style.display = isHidden ? "flex" : "none";
+        if (isHidden) {
+          chatSearchInput.focus();
+        } else {
+          clearChatSearch();
+        }
+        navSearchToggle.classList.toggle("active", isHidden);
+      });
       
       document
         .getElementById("chatModelSelect")
